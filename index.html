@@ -579,4 +579,74 @@
                 document.getElementById('modalTitle').textContent='Modifica';
                 document.getElementById('reservationId').value=res.id;
                 document.getElementById('guestName').value=res.guest_name;
-                document.
+                document.getElementById('parkingSpot').value=res.spot;
+                document.getElementById('checkInDate').value=res.check_in_date;
+                document.getElementById('checkOutDate').value=res.check_out_date;
+                document.getElementById('licensePlate').value=res.license_plate||'';
+                document.getElementById('notes').value=res.notes||'';
+                document.getElementById('deleteBtn').style.display='block';
+            }else{
+                document.getElementById('modalTitle').textContent='Nuova';
+                document.getElementById('reservationId').value='';
+                document.getElementById('guestName').value='';
+                document.getElementById('parkingSpot').value=spot;
+                document.getElementById('checkInDate').value=dateStr;
+                document.getElementById('checkOutDate').value='';
+                document.getElementById('licensePlate').value='';
+                document.getElementById('notes').value='';
+                document.getElementById('deleteBtn').style.display='none';
+            }
+            document.getElementById('reservationModal').classList.add('active');
+        }
+        
+        function closeModal(){
+            document.getElementById('reservationModal').classList.remove('active');
+        }
+        
+        async function saveReservation(event){
+            event.preventDefault();
+            const id=document.getElementById('reservationId').value;
+            const data={
+                spot:document.getElementById('parkingSpot').value,
+                guest_name:document.getElementById('guestName').value,
+                check_in_date:document.getElementById('checkInDate').value,
+                check_out_date:document.getElementById('checkOutDate').value,
+                license_plate:document.getElementById('licensePlate').value,
+                notes:document.getElementById('notes').value
+            };
+            if(data.check_in_date>=data.check_out_date){alert('⚠️ Data partenza deve essere dopo arrivo!');return;}
+            let result;
+            if(id){
+                result=await sb.from('reservations').update(data).eq('id',id);
+            }else{
+                result=await sb.from('reservations').insert([data]);
+            }
+            if(result.error){alert('❌ Errore salvataggio');return;}
+            closeModal();
+            alert('✅ Salvato!');
+            loadReservations();
+        }
+        
+        async function deleteReservation(){
+            if(!confirm('⚠️ Eliminare?'))return;
+            const id=document.getElementById('reservationId').value;
+            const{error}=await sb.from('reservations').delete().eq('id',id);
+            if(error){alert('❌ Errore');return;}
+            closeModal();
+            alert('🗑️ Eliminata!');
+            loadReservations();
+        }
+        
+        function searchGuest(){
+            const search=document.getElementById('searchGuest').value.toLowerCase();
+            const rows=document.querySelectorAll('#tableBody tr');
+            rows.forEach(row=>{
+                const found=row.textContent.toLowerCase().includes(search);
+                row.style.display=found||!search?'':'none';
+            });
+        }
+        
+        window.onload=init;
+    </script>
+</body>
+</html>
