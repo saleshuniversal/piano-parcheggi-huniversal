@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piano Parcheggio - Hotel Universal</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 25px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .header h1 {
+            font-size: 26px;
+        }
+        
+        .sync-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 13px;
+        }
+        
+        .sync-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .controls {
+            background: white;
+            padding: 20px 30px;
+            border-bottom: 2px solid #e5e7eb;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .control-group label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+        }
+        
+        .control-group select,
+        .control-group input {
+            padding: 8px 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .legend {
+            padding: 15px 30px;
+            background: #f9fafb;
+            display: flex;
+            gap: 25px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 1px solid #d1d5db;
+        }
+        
+        .parking-grid {
+            padding: 30px;
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        
+        th {
+            background: #f3f4f6;
+            padding: 8px 4px;
+            text-align: center;
+            font-weight: 600;
+            color: #374151;
+            border: 1px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        th.posto-header {
+            background: #1e3a8a;
+            color: white;
+            font-size: 13px;
+            min-width: 100px;
+        }
+        
+        td {
+            padding: 8px 4px;
+            border: 1px solid #e5e7eb;
+            vertical-align: top;
+            min-height: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 10px;
+        }
+        
+        td:hover {
+            transform: scale(1.02);
+            z-index: 5;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .occupied {
+            background: #fee2e2;
+        }
+        
+        .free {
+            background: #d1fae5;
+        }
+        
+        .reservation-text {
+            font-weight: 600;
+            color: #991b1b;
+            word-wrap: break-word;
+        }
+        
+        .zone-1-8 .posto-header { background: #0ea5e9 !important; }
+        .zone-9-27 .posto-header { background: #8b5cf6 !important; }
+        .zone-electric .posto-header { background: #10b981 !important; }
+        .zone-h .posto-header { background: #ef4444 !important; }
+        .zone-navetta .posto-header { background: #06b6d4 !important; }
+        .zone-bidoni .posto-header { background: #92400e !important; }
+        .zone-esterni .posto-header { background: #059669 !important; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.active { display: flex; }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .modal-header h2 {
+            color: #1e3a8a;
+            font-size: 22px;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #6b7280;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            margin-top: 25px;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚗 Piano Parcheggio - Hotel Universal</h1>
+            <div class="sync-indicator">
+                <div class="sync-dot"></div>
+                <span>Sincronizzato</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>Mese</label>
+                <select id="monthSelect" onchange="changeMonth()">
+                    <option value="0">Gennaio</option>
+                    <option value="1">Febbraio</option>
+                    <option value="2">Marzo</option>
+                    <option value="3">Aprile</option>
+                    <option value="4">Maggio</option>
+                    <option value="5">Giugno</option>
+                    <option value="6">Luglio</option>
+                    <option value="7">Agosto</option>
+                    <option value="8">Settembre</option>
+                    <option value="9">Ottobre</option>
+                    <option value="10">Novembre</option>
+                    <option value="11">Dicembre</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Anno</label>
+                <select id="yearSelect" onchange="changeMonth()">
+                    <option value="2025" selected>2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2027">2027</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <label>Cerca</label>
+                <input type="text" id="searchGuest" placeholder="Ospite..." oninput="searchGuest()">
+            </div>
+            
+            <button class="btn btn-primary" onclick="showAddModal()" style="margin-top: 20px;">➕ Nuova</button>
+        </div>
+        
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fee2e2;"></div><span>Occupato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>PK 16-17 ⚡</span></div>
+        </div>
+        
+        <div class="parking-grid">
+            <div class="loading" id="loading">Caricamento...</div>
+            <table id="parkingTable" style="display: none;">
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="modal" id="reservationModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Nuova Prenotazione</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <form onsubmit="saveReservation(event)">
+                <input type="hidden" id="reservationId">
+                <div class="form-group">
+                    <label>Ospite *</label>
+                    <input type="text" id="guestName" required placeholder="ROSSI MARIO">
+                </div>
+                <div class="form-group">
+                    <label>Posto *</label>
+                    <select id="parkingSpot" required><option value="">Seleziona...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Arrivo *</label>
+                    <input type="date" id="checkInDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Partenza *</label>
+                    <input type="date" id="checkOutDate" required>
+                </div>
+                <div class="form-group">
+                    <label>Targa</label>
+                    <input type="text" id="licensePlate" placeholder="AB123CD">
+                </div>
+                <div class="form-group">
+                    <label>Note</label>
+                    <textarea id="notes"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-danger" onclick="deleteReservation()" id="deleteBtn" style="display: none;">🗑️</button>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" class="btn" style="background: #6b7280; color: white;" onclick="closeModal()">Annulla</button>
+                        <button type="submit" class="btn btn-success">💾 Salva</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        const SUPABASE_URL = 'https://nsettzmyswlfrnzwvpsq.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zZXR0em15c3dsZnJuend2cHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMzA0NzIsImV4cCI6MjA4MTYwNjQ3Mn0.OA2B7-6PVOi8XSaM5_r0Dxv_wpbG5I_ImTxaR0sgUoY';
+        
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        const parkingSpots = ['PK 1','PK 2','PK 3','PK 4','PK 5','PK 6','PK 7','PK 8','PK 9','PK 10','PK 11','PK 12','PK 13','PK 14','PK 15','PK 16','PK 17','PK 18','PK 19','PK 20','PK 21','PK 22','PK 23','PK 24','PK 25','PK 26','PK 27','PK H','NAVETTA','PK ESTERNI','BIDONI'];
+        
+        let reservations = [];
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+        
+        function getZoneClass(spot) {
+            const num = parseInt(spot.replace('PK ',''));
+            if(num>=1&&num<=8)return'zone-1-8';
+            if(num===16||num===17)return'zone-electric';
+            if(num>=9&&num<=27)return'zone-9-27';
+            if(spot==='PK H')return'zone-h';
+            if(spot==='NAVETTA')return'zone-navetta';
+            if(spot==='BIDONI')return'zone-bidoni';
+            if(spot==='PK ESTERNI')return'zone-esterni';
+            return'';
+        }
+        
+        function getSpotIcon(spot){
+            const num=parseInt(spot.replace('PK ',''));
+            return(num===16||num===17)?' ⚡':'';
+        }
+        
+        async function loadReservations(){
+            const{data,error}=await sb.from('reservations').select('*');
+            if(error){alert('Errore caricamento');return;}
+            reservations=data||[];
+            document.getElementById('loading').style.display='none';
+            document.getElementById('parkingTable').style.display='table';
+            renderCalendar();
+        }
+        
+        function init(){
+            populateParkingSpots();
+            document.getElementById('monthSelect').value=currentMonth;
+            document.getElementById('yearSelect').value=currentYear;
+            loadReservations();
+            sb.channel('reservations_changes').on('postgres_changes',{event:'*',schema:'public',table:'reservations'},()=>{loadReservations();}).subscribe();
+        }
+        
+        function populateParkingSpots(){
+            const select=document.getElementById('parkingSpot');
+            parkingSpots.forEach(spot=>{
+                const option=document.createElement('option');
+                option.value=spot;
+                option.textContent=spot+getSpotIcon(spot);
+                select.appendChild(option);
+            });
+        }
+        
+        function changeMonth(){
+            currentMonth=parseInt(document.getElementById('monthSelect').value);
+            currentYear=parseInt(document.getElementById('yearSelect').value);
+            renderCalendar();
+        }
+        
+        function getDaysInMonth(month,year){
+            return new Date(year,month+1,0).getDate();
+        }
+        
+        function getDayInitials(date){
+            const days=['DOM','LUN','MAR','MER','GIO','VEN','SAB'];
+            return days[date.getDay()];
+        }
+        
+        function isOccupied(spot,dateStr){
+            return reservations.find(res=>res.spot===spot&&dateStr>=res.check_in_date&&dateStr<=res.check_out_date);
+        }
+        
+        function renderCalendar(){
+            const daysInMonth=getDaysInMonth(currentMonth,currentYear);
+            const tableHead=document.getElementById('tableHead');
+            const tableBody=document.getElementById('tableBody');
+            let headerHTML='<tr><th class="posto-header">Posto</th>';
+            for(let day=1;day<=daysInMonth;day++){
+                const date=new Date(currentYear,currentMonth,day);
+                const dayInitials=getDayInitials(date);
+                headerHTML+=`<th>${day}<br><small style="font-size:9px;">${dayInitials}</small></th>`;
+            }
+            headerHTML+='</tr>';
+            tableHead.innerHTML=headerHTML;
+            let bodyHTML='';
+            parkingSpots.forEach(spot=>{
+                const zoneClass=getZoneClass(spot);
+                const spotIcon=getSpotIcon(spot);
+                bodyHTML+=`<tr class="${zoneClass}"><td class="posto-header">${spot}${spotIcon}</td>`;
+                for(let day=1;day<=daysInMonth;day++){
+                    const date=new Date(currentYear,currentMonth,day);
+                    const dateStr=date.toISOString().split('T')[0];
+                    const res=isOccupied(spot,dateStr);
+                    let cellClass=res?'occupied':'free';
+                    let cellContent='';
+                    if(res&&res.check_in_date===dateStr){
+                        cellContent=`<div class="reservation-text">${res.guest_name}</div>`;
+                        if(res.license_plate){
+                            cellContent+=`<div style="font-size:9px;color:#6b7280;">${res.license_plate}</div>`;
+                        }
+                    }
+                    bodyHTML+=`<td class="${cellClass}" onclick='openModal("${spot}","${dateStr}")'>${cellContent}</td>`;
+                }
+                bodyHTML+='</tr>';
+            });
+            tableBody.innerHTML=bodyHTML;
+        }
+        
+        function showAddModal(){
+            document.getElementById('modalTitle').textContent='Nuova Prenotazione';
+            document.getElementById('reservationId').value='';
+            document.getElementById('guestName').value='';
+            document.getElementById('parkingSpot').value='';
+            document.getElementById('checkInDate').value='';
+            document.getElementById('checkOutDate').value='';
+            document.getElementById('licensePlate').value='';
+            document.getElementById('notes').value='';
+            document.getElementById('deleteBtn').style.display='none';
+            document.getElementById('reservationModal').classList.add('active');
+        }
+        
+        function openModal(spot,dateStr){
+            const res=isOccupied(spot,dateStr);
+            if(res){
+                document.getElementById('modalTitle').textContent='Modifica';
+                document.getElementById('reservationId').value=res.id;
+                document.getElementById('guestName').value=res.guest_name;
+                document.getElementById('parkingSpot').value=res.spot;
+                document.getElementById('checkInDate').value=res.check_in_date;
+                document.getElementById('checkOutDate').value=res.check_out_date;
+                document.getElementById('licensePlate').value=res.license_plate||'';
+                document.getElementById('notes').value=res.notes||'';
+                document.getElementById('deleteBtn').style.display='block';
+            }else{
+                document.getElementById('modalTitle').textContent='Nuova';
+                document.getElementById('reservationId').value='';
+                document.getElementById('guestName').value='';
+                document.getElementById('parkingSpot').value=spot;
+                document.getElementById('checkInDate').value=dateStr;
+                document.getElementById('checkOutDate').value='';
+                document.getElementById('licensePlate').value='';
+                document.getElementById('notes').value='';
+                document.getElementById('deleteBtn').style.display='none';
+            }
+            document.getElementById('reservationModal').classList.add('active');
+        }
+        
+        function closeModal(){
+            document.getElementById('reservationModal').classList.remove('active');
+        }
+        
+        async function saveReservation(event){
+            event.preventDefault();
+            const id=document.getElementById('reservationId').value;
+            const data={
+                spot:document.getElementById('parkingSpot').value,
+                guest_name:document.getElementById('guestName').value,
+                check_in_date:document.getElementById('checkInDate').value,
+                check_out_date:document.getElementById('checkOutDate').value,
+                license_plate:document.getElementById('licensePlate').value,
+                notes:document.getElementById('notes').value
+            };
+            if(data.check_in_date>data.check_out_date){alert('⚠️ Data partenza dopo arrivo!');return;}
+            let result;
+            if(id){
+                result=await sb.from('reservations').update(data).eq('id',id);
+            }else{
+                result=await sb.from('reservations').insert([data]);
+            }
+            if(result.error){alert('❌ Errore salvataggio');return;}
+            closeModal();
+            alert('✅ Salvato!');
+            loadReservations();
+        }
+        
+        async function deleteReservation(){
+            if(!confirm('⚠️ Eliminare?'))return;
+            const id=document.getElementById('reservationId').value;
+            const{error}=await sb.from('reservations').delete().eq('id',id);
+            if(error){alert('❌ Errore');return;}
+            closeModal();
+            alert('🗑️ Eliminata!');
+            loadReservations();
+        }
+        
+        function searchGuest(){
+            const search=document.getElementById('searchGuest').value.toLowerCase();
+            const rows=document.querySelectorAll('#tableBody tr');
+            rows.forEach(row=>{
+                const found=row.textContent.toLowerCase().includes(search);
+                row.style.display=found||!search?'':'none';
+            });
+        }
+        
+        window.onload=init;
+    </script>
+</body>
+</html>
