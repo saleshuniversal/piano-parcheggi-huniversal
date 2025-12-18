@@ -152,7 +152,8 @@
         
         table {
             width: 100%;
-            border-collapse: collapse;
+            border-collapse: separate;
+            border-spacing: 0;
             font-size: 12px;
         }
         
@@ -192,9 +193,45 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         
+        /* Stili per le prenotazioni con bordi continui */
         .occupied {
             background: #fee2e2;
-            border: 2px solid #dc2626 !important;
+            border-top: 3px solid #dc2626 !important;
+            border-bottom: 3px solid #dc2626 !important;
+        }
+        
+        .occupied.reservation-start {
+            border-left: 3px solid #dc2626 !important;
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+        
+        .occupied.reservation-end {
+            border-right: 3px solid #dc2626 !important;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+        }
+        
+        .occupied.reservation-single {
+            border: 3px solid #dc2626 !important;
+            border-radius: 8px;
+        }
+        
+        /* Stile per overbooking */
+        .overbooking {
+            background: repeating-linear-gradient(
+                45deg,
+                #fca5a5,
+                #fca5a5 10px,
+                #ef4444 10px,
+                #ef4444 20px
+            ) !important;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.7; }
         }
         
         .free {
@@ -205,40 +242,63 @@
             font-weight: 600;
             color: #991b1b;
             word-wrap: break-word;
+            pointer-events: none;
         }
         
-        /* Tooltip */
+        /* Stile per drag & drop */
+        .dragging {
+            opacity: 0.5;
+            cursor: grabbing !important;
+        }
+        
+        .drag-over {
+            background: #fef3c7 !important;
+            border: 3px dashed #f59e0b !important;
+        }
+        
+        .draggable {
+            cursor: grab;
+        }
+        
+        /* Tooltip migliorato */
         .tooltip {
             visibility: hidden;
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
+            position: fixed;
             background-color: #1f2937;
             color: white;
-            text-align: center;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 11px;
-            white-space: nowrap;
-            z-index: 100;
-            margin-bottom: 5px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 1000;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            min-width: 250px;
+            max-width: 350px;
+            pointer-events: none;
         }
         
-        .tooltip::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: #1f2937 transparent transparent transparent;
+        .tooltip-header {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            color: #60a5fa;
         }
         
-        td:hover .tooltip {
-            visibility: visible;
+        .tooltip-row {
+            margin: 6px 0;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .tooltip-label {
+            font-weight: 600;
+            color: #9ca3af;
+            min-width: 70px;
+        }
+        
+        .tooltip-value {
+            color: white;
         }
         
         .zone-1-8 .posto-header { background: #0ea5e9 !important; }
@@ -336,6 +396,21 @@
             font-size: 18px;
             color: #6b7280;
         }
+        
+        .info-banner {
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            padding: 15px 20px;
+            margin: 20px 30px;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #1e40af;
+        }
+        
+        .info-banner strong {
+            display: block;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -384,9 +459,15 @@
             <button class="btn btn-primary" onclick="showAddModal()" style="margin-top: 20px;">➕ Nuova</button>
         </div>
         
+        <div class="info-banner">
+            <strong>💡 Nuove funzionalità:</strong>
+            Trascina le prenotazioni tra i posti auto per spostarle • Passa il mouse per vedere tutti i dettagli • L'overbooking temporaneo è consentito durante gli spostamenti
+        </div>
+        
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626;"></div><span>Occupato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 3px solid #dc2626; border-radius: 4px;"></div><span>Occupato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: repeating-linear-gradient(45deg, #fca5a5, #fca5a5 5px, #ef4444 5px, #ef4444 10px); border-radius: 4px;"></div><span>Overbooking</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>PK 16-17 ⚡</span></div>
         </div>
         
@@ -442,6 +523,9 @@
         </div>
     </div>
     
+    <!-- Tooltip globale -->
+    <div id="globalTooltip" class="tooltip"></div>
+    
     <script>
         const SUPABASE_URL = 'https://nsettzmyswlfrnzwvpsq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zZXR0em15c3dsZnJuend2cHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMzA0NzIsImV4cCI6MjA4MTYwNjQ3Mn0.OA2B7-6PVOi8XSaM5_r0Dxv_wpbG5I_ImTxaR0sgUoY';
@@ -453,6 +537,7 @@
         let reservations = [];
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
+        let draggedReservation = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -513,9 +598,37 @@
             return days[date.getDay()];
         }
         
-        function isOccupied(spot,dateStr){
-            // MODIFICA: check-out day è libero, quindi cerchiamo prenotazioni dove dateStr è >= check_in E < check_out
-            return reservations.find(res=>res.spot===spot&&dateStr>=res.check_in_date&&dateStr<res.check_out_date);
+        function getReservationsForDate(spot,dateStr){
+            return reservations.filter(res=>res.spot===spot&&dateStr>=res.check_in_date&&dateStr<res.check_out_date);
+        }
+        
+        function formatDate(dateStr){
+            const date=new Date(dateStr);
+            return date.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
+        }
+        
+        function showTooltip(event,reservation){
+            const tooltip=document.getElementById('globalTooltip');
+            
+            let html=`<div class="tooltip-header">${reservation.guest_name}</div>`;
+            html+=`<div class="tooltip-row"><span class="tooltip-label">Check-in:</span><span class="tooltip-value">${formatDate(reservation.check_in_date)}</span></div>`;
+            html+=`<div class="tooltip-row"><span class="tooltip-label">Check-out:</span><span class="tooltip-value">${formatDate(reservation.check_out_date)}</span></div>`;
+            if(reservation.license_plate){
+                html+=`<div class="tooltip-row"><span class="tooltip-label">Targa:</span><span class="tooltip-value">${reservation.license_plate}</span></div>`;
+            }
+            if(reservation.notes){
+                html+=`<div class="tooltip-row"><span class="tooltip-label">Note:</span><span class="tooltip-value">${reservation.notes}</span></div>`;
+            }
+            
+            tooltip.innerHTML=html;
+            tooltip.style.visibility='visible';
+            tooltip.style.left=(event.pageX+15)+'px';
+            tooltip.style.top=(event.pageY+15)+'px';
+        }
+        
+        function hideTooltip(){
+            const tooltip=document.getElementById('globalTooltip');
+            tooltip.style.visibility='hidden';
         }
         
         function renderCalendar(){
@@ -531,33 +644,121 @@
             headerHTML+='</tr>';
             tableHead.innerHTML=headerHTML;
             let bodyHTML='';
+            
             parkingSpots.forEach(spot=>{
                 const zoneClass=getZoneClass(spot);
                 const spotIcon=getSpotIcon(spot);
                 bodyHTML+=`<tr class="${zoneClass}"><td class="posto-header">${spot}${spotIcon}</td>`;
+                
                 for(let day=1;day<=daysInMonth;day++){
                     const date=new Date(currentYear,currentMonth,day);
                     const dateStr=date.toISOString().split('T')[0];
-                    const res=isOccupied(spot,dateStr);
-                    let cellClass=res?'occupied':'free';
+                    const resList=getReservationsForDate(spot,dateStr);
+                    
+                    let cellClass='free';
                     let cellContent='';
-                    let tooltipHTML='';
-                    if(res){
-                        // Mostra nome solo il primo giorno
-                        if(res.check_in_date===dateStr){
-                            cellContent=`<div class="reservation-text">${res.guest_name}</div>`;
-                            if(res.license_plate){
-                                cellContent+=`<div style="font-size:9px;color:#6b7280;">${res.license_plate}</div>`;
+                    let borderClass='';
+                    let dragAttributes='';
+                    let eventHandlers='';
+                    
+                    if(resList.length>0){
+                        const res=resList[0]; // Prima prenotazione
+                        
+                        // Determina se è inizio, fine o singola
+                        const isStart=(res.check_in_date===dateStr);
+                        const isEnd=(new Date(res.check_out_date).setDate(new Date(res.check_out_date).getDate()-1))===date.getTime();
+                        
+                        if(isStart&&isEnd){
+                            borderClass='reservation-single';
+                        }else if(isStart){
+                            borderClass='reservation-start';
+                        }else if(isEnd){
+                            borderClass='reservation-end';
+                        }
+                        
+                        // Overbooking
+                        if(resList.length>1){
+                            cellClass='occupied overbooking '+borderClass;
+                            cellContent='<div class="reservation-text">⚠️ OVERBOOKING</div>';
+                        }else{
+                            cellClass='occupied '+borderClass;
+                            // Mostra nome solo il primo giorno
+                            if(isStart){
+                                cellContent=`<div class="reservation-text">${res.guest_name}</div>`;
                             }
                         }
-                        // Tooltip sempre presente
-                        tooltipHTML=`<span class="tooltip">${res.guest_name}${res.license_plate?' - '+res.license_plate:''}</span>`;
+                        
+                        // Drag & drop
+                        dragAttributes=`draggable="true" data-reservation-id="${res.id}"`;
+                        eventHandlers=`onmouseenter="showTooltip(event,${JSON.stringify(res).replace(/"/g,'&quot;')})" onmouseleave="hideTooltip()" onmousemove="updateTooltipPosition(event)" ondragstart="handleDragStart(event,${res.id})" ondragend="handleDragEnd(event)"`;
+                    }else{
+                        eventHandlers=`onclick='openModal("${spot}","${dateStr}")'`;
                     }
-                    bodyHTML+=`<td class="${cellClass}" onclick='openModal("${spot}","${dateStr}")'>${cellContent}${tooltipHTML}</td>`;
+                    
+                    bodyHTML+=`<td class="${cellClass} draggable" ${dragAttributes} ${eventHandlers} ondragover="handleDragOver(event)" ondrop="handleDrop(event,'${spot}','${dateStr}')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)">${cellContent}</td>`;
                 }
                 bodyHTML+='</tr>';
             });
             tableBody.innerHTML=bodyHTML;
+        }
+        
+        function updateTooltipPosition(event){
+            const tooltip=document.getElementById('globalTooltip');
+            if(tooltip.style.visibility==='visible'){
+                tooltip.style.left=(event.pageX+15)+'px';
+                tooltip.style.top=(event.pageY+15)+'px';
+            }
+        }
+        
+        function handleDragStart(event,reservationId){
+            draggedReservation=reservations.find(r=>r.id===reservationId);
+            event.currentTarget.classList.add('dragging');
+            hideTooltip();
+        }
+        
+        function handleDragEnd(event){
+            event.currentTarget.classList.remove('dragging');
+            draggedReservation=null;
+            // Rimuovi tutti gli highlight
+            document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+        }
+        
+        function handleDragOver(event){
+            event.preventDefault();
+        }
+        
+        function handleDragEnter(event){
+            if(draggedReservation&&event.currentTarget.tagName==='TD'){
+                event.currentTarget.classList.add('drag-over');
+            }
+        }
+        
+        function handleDragLeave(event){
+            event.currentTarget.classList.remove('drag-over');
+        }
+        
+        async function handleDrop(event,newSpot,dateStr){
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+            
+            if(!draggedReservation)return;
+            
+            // Verifica overbooking
+            const existingRes=getReservationsForDate(newSpot,dateStr);
+            if(existingRes.length>0&&!confirm('⚠️ Attenzione: c\'è già una prenotazione su questo posto. Vuoi creare un overbooking temporaneo?')){
+                return;
+            }
+            
+            // Aggiorna la prenotazione con il nuovo posto
+            const{error}=await sb.from('reservations').update({spot:newSpot}).eq('id',draggedReservation.id);
+            
+            if(error){
+                alert('❌ Errore nello spostamento');
+                return;
+            }
+            
+            alert('✅ Prenotazione spostata!');
+            loadReservations();
         }
         
         function showAddModal(){
@@ -574,8 +775,9 @@
         }
         
         function openModal(spot,dateStr){
-            const res=isOccupied(spot,dateStr);
-            if(res){
+            const resList=getReservationsForDate(spot,dateStr);
+            if(resList.length>0){
+                const res=resList[0];
                 document.getElementById('modalTitle').textContent='Modifica';
                 document.getElementById('reservationId').value=res.id;
                 document.getElementById('guestName').value=res.guest_name;
