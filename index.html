@@ -187,7 +187,7 @@
             position: relative;
         }
         
-        td:hover {
+        td:not(.occupied):hover {
             transform: scale(1.02);
             z-index: 5;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -198,6 +198,11 @@
             background: #fee2e2;
             border-top: 3px solid #dc2626 !important;
             border-bottom: 3px solid #dc2626 !important;
+            cursor: grab !important;
+        }
+        
+        .occupied:active {
+            cursor: grabbing !important;
         }
         
         .occupied.reservation-start {
@@ -238,17 +243,9 @@
             background: #d1fae5;
         }
         
-        .reservation-text {
-            font-weight: 600;
-            color: #991b1b;
-            word-wrap: break-word;
-            pointer-events: none;
-        }
-        
         /* Stile per drag & drop */
         .dragging {
             opacity: 0.5;
-            cursor: grabbing !important;
         }
         
         .drag-over {
@@ -256,12 +253,8 @@
             border: 3px dashed #f59e0b !important;
         }
         
-        .draggable {
-            cursor: grab;
-        }
-        
-        /* Tooltip migliorato */
-        .tooltip {
+        /* Tooltip migliorato - posizionato SOPRA la cella */
+        #globalTooltip {
             visibility: hidden;
             position: fixed;
             background-color: #1f2937;
@@ -269,11 +262,11 @@
             padding: 12px 16px;
             border-radius: 8px;
             font-size: 12px;
-            z-index: 1000;
+            z-index: 10000;
             box-shadow: 0 8px 20px rgba(0,0,0,0.4);
             min-width: 250px;
             max-width: 350px;
-            pointer-events: none;
+            pointer-events: auto;
         }
         
         .tooltip-header {
@@ -294,11 +287,48 @@
         .tooltip-label {
             font-weight: 600;
             color: #9ca3af;
-            min-width: 70px;
+            min-width: 80px;
         }
         
         .tooltip-value {
             color: white;
+        }
+        
+        .tooltip-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .tooltip-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tooltip-btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .tooltip-btn-edit:hover {
+            background: #2563eb;
+        }
+        
+        .tooltip-btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .tooltip-btn-delete:hover {
+            background: #dc2626;
         }
         
         .zone-1-8 .posto-header { background: #0ea5e9 !important; }
@@ -460,8 +490,8 @@
         </div>
         
         <div class="info-banner">
-            <strong>💡 Nuove funzionalità:</strong>
-            Trascina le prenotazioni tra i posti auto per spostarle • Passa il mouse per vedere tutti i dettagli • L'overbooking temporaneo è consentito durante gli spostamenti
+            <strong>💡 Come funziona:</strong>
+            TRASCINA per spostare • DOPPIO CLICK per modificare • Passa il MOUSE per vedere dettagli e pulsanti
         </div>
         
         <div class="legend">
@@ -513,7 +543,7 @@
                     <textarea id="notes"></textarea>
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn btn-danger" onclick="deleteReservation()" id="deleteBtn" style="display: none;">🗑️</button>
+                    <button type="button" class="btn btn-danger" onclick="deleteReservation()" id="deleteBtn" style="display: none;">🗑️ Elimina</button>
                     <div style="display: flex; gap: 10px;">
                         <button type="button" class="btn" style="background: #6b7280; color: white;" onclick="closeModal()">Annulla</button>
                         <button type="submit" class="btn btn-success">💾 Salva</button>
@@ -524,7 +554,7 @@
     </div>
     
     <!-- Tooltip globale -->
-    <div id="globalTooltip" class="tooltip"></div>
+    <div id="globalTooltip"></div>
     
     <script>
         const SUPABASE_URL = 'https://nsettzmyswlfrnzwvpsq.supabase.co';
@@ -538,6 +568,8 @@
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
         let draggedReservation = null;
+        let cellReservationMap = new Map();
+        let currentHoveredCell = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -603,35 +635,91 @@
         }
         
         function formatDate(dateStr){
-            const date=new Date(dateStr);
+            const date=new Date(dateStr+'T00:00:00');
             return date.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
         }
         
-        function showTooltip(event,reservation){
+        function showTooltip(event,cellKey){
+            const res=cellReservationMap.get(cellKey);
+            if(!res)return;
+            
+            currentHoveredCell=event.currentTarget;
+            
             const tooltip=document.getElementById('globalTooltip');
             
-            let html=`<div class="tooltip-header">${reservation.guest_name}</div>`;
-            html+=`<div class="tooltip-row"><span class="tooltip-label">Check-in:</span><span class="tooltip-value">${formatDate(reservation.check_in_date)}</span></div>`;
-            html+=`<div class="tooltip-row"><span class="tooltip-label">Check-out:</span><span class="tooltip-value">${formatDate(reservation.check_out_date)}</span></div>`;
-            if(reservation.license_plate){
-                html+=`<div class="tooltip-row"><span class="tooltip-label">Targa:</span><span class="tooltip-value">${reservation.license_plate}</span></div>`;
+            let html='<div class="tooltip-header">'+res.guest_name+'</div>';
+            html+='<div class="tooltip-row"><span class="tooltip-label">Check-in:</span><span class="tooltip-value">'+formatDate(res.check_in_date)+'</span></div>';
+            html+='<div class="tooltip-row"><span class="tooltip-label">Check-out:</span><span class="tooltip-value">'+formatDate(res.check_out_date)+'</span></div>';
+            if(res.license_plate){
+                html+='<div class="tooltip-row"><span class="tooltip-label">Targa:</span><span class="tooltip-value">'+res.license_plate+'</span></div>';
             }
-            if(reservation.notes){
-                html+=`<div class="tooltip-row"><span class="tooltip-label">Note:</span><span class="tooltip-value">${reservation.notes}</span></div>`;
+            if(res.notes){
+                html+='<div class="tooltip-row"><span class="tooltip-label">Note:</span><span class="tooltip-value">'+res.notes+'</span></div>';
             }
+            html+='<div class="tooltip-actions">';
+            html+='<button class="tooltip-btn tooltip-btn-edit" onclick="editFromTooltip(\''+cellKey+'\')">✏️ Modifica</button>';
+            html+='<button class="tooltip-btn tooltip-btn-delete" onclick="deleteFromTooltip(\''+cellKey+'\')">🗑️ Elimina</button>';
+            html+='</div>';
             
             tooltip.innerHTML=html;
             tooltip.style.visibility='visible';
-            tooltip.style.left=(event.pageX+15)+'px';
-            tooltip.style.top=(event.pageY+15)+'px';
+            positionTooltip(event.currentTarget);
+        }
+        
+        function positionTooltip(cell){
+            const tooltip=document.getElementById('globalTooltip');
+            const rect=cell.getBoundingClientRect();
+            
+            // Posiziona il tooltip SOPRA la cella
+            const tooltipHeight=tooltip.offsetHeight;
+            let top=rect.top-tooltipHeight-10;
+            let left=rect.left+(rect.width/2)-(tooltip.offsetWidth/2);
+            
+            // Se il tooltip esce sopra, mettilo sotto
+            if(top<0){
+                top=rect.bottom+10;
+            }
+            
+            // Se il tooltip esce a sinistra o destra, aggiusta
+            if(left<10){
+                left=10;
+            }
+            if(left+tooltip.offsetWidth>window.innerWidth-10){
+                left=window.innerWidth-tooltip.offsetWidth-10;
+            }
+            
+            tooltip.style.left=left+'px';
+            tooltip.style.top=top+'px';
         }
         
         function hideTooltip(){
-            const tooltip=document.getElementById('globalTooltip');
-            tooltip.style.visibility='hidden';
+            document.getElementById('globalTooltip').style.visibility='hidden';
+            currentHoveredCell=null;
+        }
+        
+        function editFromTooltip(cellKey){
+            hideTooltip();
+            const res=cellReservationMap.get(cellKey);
+            if(!res)return;
+            openModalWithReservation(res);
+        }
+        
+        async function deleteFromTooltip(cellKey){
+            hideTooltip();
+            const res=cellReservationMap.get(cellKey);
+            if(!res)return;
+            if(!confirm('⚠️ Sei sicuro di voler eliminare la prenotazione di '+res.guest_name+'?'))return;
+            const{error}=await sb.from('reservations').delete().eq('id',res.id);
+            if(error){
+                alert('❌ Errore nell\'eliminazione');
+                return;
+            }
+            alert('🗑️ Prenotazione eliminata!');
+            loadReservations();
         }
         
         function renderCalendar(){
+            cellReservationMap.clear();
             const daysInMonth=getDaysInMonth(currentMonth,currentYear);
             const tableHead=document.getElementById('tableHead');
             const tableBody=document.getElementById('tableBody');
@@ -639,34 +727,37 @@
             for(let day=1;day<=daysInMonth;day++){
                 const date=new Date(currentYear,currentMonth,day);
                 const dayInitials=getDayInitials(date);
-                headerHTML+=`<th>${day}<br><small style="font-size:9px;">${dayInitials}</small></th>`;
+                headerHTML+='<th>'+day+'<br><small style="font-size:9px;">'+dayInitials+'</small></th>';
             }
             headerHTML+='</tr>';
             tableHead.innerHTML=headerHTML;
+            
             let bodyHTML='';
             
             parkingSpots.forEach(spot=>{
                 const zoneClass=getZoneClass(spot);
                 const spotIcon=getSpotIcon(spot);
-                bodyHTML+=`<tr class="${zoneClass}"><td class="posto-header">${spot}${spotIcon}</td>`;
+                bodyHTML+='<tr class="'+zoneClass+'"><td class="posto-header">'+spot+spotIcon+'</td>';
                 
                 for(let day=1;day<=daysInMonth;day++){
                     const date=new Date(currentYear,currentMonth,day);
                     const dateStr=date.toISOString().split('T')[0];
                     const resList=getReservationsForDate(spot,dateStr);
+                    const cellKey=spot+'-'+dateStr;
                     
                     let cellClass='free';
-                    let cellContent='';
                     let borderClass='';
-                    let dragAttributes='';
-                    let eventHandlers='';
+                    let cellAttrs='';
                     
                     if(resList.length>0){
-                        const res=resList[0]; // Prima prenotazione
+                        const res=resList[0];
+                        cellReservationMap.set(cellKey,res);
                         
-                        // Determina se è inizio, fine o singola
                         const isStart=(res.check_in_date===dateStr);
-                        const isEnd=(new Date(res.check_out_date).setDate(new Date(res.check_out_date).getDate()-1))===date.getTime();
+                        const checkOutDate=new Date(res.check_out_date);
+                        const dayBeforeCheckout=new Date(checkOutDate);
+                        dayBeforeCheckout.setDate(dayBeforeCheckout.getDate()-1);
+                        const isEnd=(dayBeforeCheckout.toISOString().split('T')[0]===dateStr);
                         
                         if(isStart&&isEnd){
                             borderClass='reservation-single';
@@ -676,42 +767,35 @@
                             borderClass='reservation-end';
                         }
                         
-                        // Overbooking
                         if(resList.length>1){
                             cellClass='occupied overbooking '+borderClass;
-                            cellContent='<div class="reservation-text">⚠️ OVERBOOKING</div>';
                         }else{
                             cellClass='occupied '+borderClass;
-                            // Mostra nome solo il primo giorno
-                            if(isStart){
-                                cellContent=`<div class="reservation-text">${res.guest_name}</div>`;
-                            }
                         }
                         
-                        // Drag & drop
-                        dragAttributes=`draggable="true" data-reservation-id="${res.id}"`;
-                        eventHandlers=`onmouseenter="showTooltip(event,${JSON.stringify(res).replace(/"/g,'&quot;')})" onmouseleave="hideTooltip()" onmousemove="updateTooltipPosition(event)" ondragstart="handleDragStart(event,${res.id})" ondragend="handleDragEnd(event)"`;
+                        cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="hideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
                     }else{
-                        eventHandlers=`onclick='openModal("${spot}","${dateStr}")'`;
+                        cellAttrs='onclick="openModal(\''+spot+'\',\''+dateStr+'\')"';
                     }
                     
-                    bodyHTML+=`<td class="${cellClass} draggable" ${dragAttributes} ${eventHandlers} ondragover="handleDragOver(event)" ondrop="handleDrop(event,'${spot}','${dateStr}')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)">${cellContent}</td>`;
+                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' ondragover="handleDragOver(event)" ondrop="handleDrop(event,\''+spot+'\',\''+dateStr+'\')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)"></td>';
                 }
                 bodyHTML+='</tr>';
             });
             tableBody.innerHTML=bodyHTML;
         }
         
-        function updateTooltipPosition(event){
-            const tooltip=document.getElementById('globalTooltip');
-            if(tooltip.style.visibility==='visible'){
-                tooltip.style.left=(event.pageX+15)+'px';
-                tooltip.style.top=(event.pageY+15)+'px';
-            }
+        function openModalByDoubleClick(cellKey){
+            const res=cellReservationMap.get(cellKey);
+            if(!res)return;
+            hideTooltip();
+            openModalWithReservation(res);
         }
         
-        function handleDragStart(event,reservationId){
-            draggedReservation=reservations.find(r=>r.id===reservationId);
+        function handleDragStart(event,cellKey){
+            const res=cellReservationMap.get(cellKey);
+            if(!res)return;
+            draggedReservation=res;
             event.currentTarget.classList.add('dragging');
             hideTooltip();
         }
@@ -719,7 +803,6 @@
         function handleDragEnd(event){
             event.currentTarget.classList.remove('dragging');
             draggedReservation=null;
-            // Rimuovi tutti gli highlight
             document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
         }
         
@@ -743,13 +826,11 @@
             
             if(!draggedReservation)return;
             
-            // Verifica overbooking
             const existingRes=getReservationsForDate(newSpot,dateStr);
-            if(existingRes.length>0&&!confirm('⚠️ Attenzione: c\'è già una prenotazione su questo posto. Vuoi creare un overbooking temporaneo?')){
+            if(existingRes.length>0&&!confirm('⚠️ Attenzione: c\'è già una prenotazione su questo posto nelle stesse date. Vuoi creare un overbooking temporaneo?')){
                 return;
             }
             
-            // Aggiorna la prenotazione con il nuovo posto
             const{error}=await sb.from('reservations').update({spot:newSpot}).eq('id',draggedReservation.id);
             
             if(error){
@@ -757,7 +838,7 @@
                 return;
             }
             
-            alert('✅ Prenotazione spostata!');
+            alert('✅ Prenotazione spostata con successo!');
             loadReservations();
         }
         
@@ -774,21 +855,25 @@
             document.getElementById('reservationModal').classList.add('active');
         }
         
+        function openModalWithReservation(res){
+            document.getElementById('modalTitle').textContent='Modifica Prenotazione';
+            document.getElementById('reservationId').value=res.id;
+            document.getElementById('guestName').value=res.guest_name;
+            document.getElementById('parkingSpot').value=res.spot;
+            document.getElementById('checkInDate').value=res.check_in_date;
+            document.getElementById('checkOutDate').value=res.check_out_date;
+            document.getElementById('licensePlate').value=res.license_plate||'';
+            document.getElementById('notes').value=res.notes||'';
+            document.getElementById('deleteBtn').style.display='block';
+            document.getElementById('reservationModal').classList.add('active');
+        }
+        
         function openModal(spot,dateStr){
             const resList=getReservationsForDate(spot,dateStr);
             if(resList.length>0){
-                const res=resList[0];
-                document.getElementById('modalTitle').textContent='Modifica';
-                document.getElementById('reservationId').value=res.id;
-                document.getElementById('guestName').value=res.guest_name;
-                document.getElementById('parkingSpot').value=res.spot;
-                document.getElementById('checkInDate').value=res.check_in_date;
-                document.getElementById('checkOutDate').value=res.check_out_date;
-                document.getElementById('licensePlate').value=res.license_plate||'';
-                document.getElementById('notes').value=res.notes||'';
-                document.getElementById('deleteBtn').style.display='block';
+                openModalWithReservation(resList[0]);
             }else{
-                document.getElementById('modalTitle').textContent='Nuova';
+                document.getElementById('modalTitle').textContent='Nuova Prenotazione';
                 document.getElementById('reservationId').value='';
                 document.getElementById('guestName').value='';
                 document.getElementById('parkingSpot').value=spot;
@@ -797,8 +882,8 @@
                 document.getElementById('licensePlate').value='';
                 document.getElementById('notes').value='';
                 document.getElementById('deleteBtn').style.display='none';
+                document.getElementById('reservationModal').classList.add('active');
             }
-            document.getElementById('reservationModal').classList.add('active');
         }
         
         function closeModal(){
@@ -816,35 +901,58 @@
                 license_plate:document.getElementById('licensePlate').value,
                 notes:document.getElementById('notes').value
             };
-            if(data.check_in_date>=data.check_out_date){alert('⚠️ Data partenza deve essere dopo arrivo!');return;}
+            if(data.check_in_date>=data.check_out_date){
+                alert('⚠️ La data di partenza deve essere successiva alla data di arrivo!');
+                return;
+            }
             let result;
             if(id){
                 result=await sb.from('reservations').update(data).eq('id',id);
             }else{
                 result=await sb.from('reservations').insert([data]);
             }
-            if(result.error){alert('❌ Errore salvataggio');return;}
+            if(result.error){
+                alert('❌ Errore nel salvataggio');
+                return;
+            }
             closeModal();
-            alert('✅ Salvato!');
+            alert('✅ Prenotazione salvata con successo!');
             loadReservations();
         }
         
         async function deleteReservation(){
-            if(!confirm('⚠️ Eliminare?'))return;
+            if(!confirm('⚠️ Sei sicuro di voler eliminare questa prenotazione?'))return;
             const id=document.getElementById('reservationId').value;
             const{error}=await sb.from('reservations').delete().eq('id',id);
-            if(error){alert('❌ Errore');return;}
+            if(error){
+                alert('❌ Errore nell\'eliminazione');
+                return;
+            }
             closeModal();
-            alert('🗑️ Eliminata!');
+            alert('🗑️ Prenotazione eliminata!');
             loadReservations();
         }
         
         function searchGuest(){
             const search=document.getElementById('searchGuest').value.toLowerCase();
-            const rows=document.querySelectorAll('#tableBody tr');
-            rows.forEach(row=>{
-                const found=row.textContent.toLowerCase().includes(search);
-                row.style.display=found||!search?'':'none';
+            if(!search){
+                document.querySelectorAll('#tableBody tr').forEach(row=>row.style.display='');
+                return;
+            }
+            
+            const matchingReservations=reservations.filter(res=>
+                res.guest_name.toLowerCase().includes(search)||
+                (res.license_plate&&res.license_plate.toLowerCase().includes(search))
+            );
+            
+            const matchingSpots=new Set(matchingReservations.map(res=>res.spot));
+            
+            document.querySelectorAll('#tableBody tr').forEach(row=>{
+                const spotCell=row.querySelector('.posto-header');
+                if(spotCell){
+                    const spotName=spotCell.textContent.trim().replace('⚡','').trim();
+                    row.style.display=matchingSpots.has(spotName)||!search?'':'none';
+                }
             });
         }
         
