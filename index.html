@@ -183,6 +183,7 @@
             cursor: pointer;
             transition: all 0.2s;
             font-size: 10px;
+            position: relative;
         }
         
         td:hover {
@@ -193,6 +194,7 @@
         
         .occupied {
             background: #fee2e2;
+            border: 2px solid #dc2626 !important;
         }
         
         .free {
@@ -203,6 +205,40 @@
             font-weight: 600;
             color: #991b1b;
             word-wrap: break-word;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            visibility: hidden;
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #1f2937;
+            color: white;
+            text-align: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            white-space: nowrap;
+            z-index: 100;
+            margin-bottom: 5px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        
+        .tooltip::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+        
+        td:hover .tooltip {
+            visibility: visible;
         }
         
         .zone-1-8 .posto-header { background: #0ea5e9 !important; }
@@ -350,7 +386,7 @@
         
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #fee2e2;"></div><span>Occupato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626;"></div><span>Occupato</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>PK 16-17 ⚡</span></div>
         </div>
         
@@ -478,7 +514,8 @@
         }
         
         function isOccupied(spot,dateStr){
-            return reservations.find(res=>res.spot===spot&&dateStr>=res.check_in_date&&dateStr<=res.check_out_date);
+            // MODIFICA: check-out day è libero, quindi cerchiamo prenotazioni dove dateStr è >= check_in E < check_out
+            return reservations.find(res=>res.spot===spot&&dateStr>=res.check_in_date&&dateStr<res.check_out_date);
         }
         
         function renderCalendar(){
@@ -504,13 +541,19 @@
                     const res=isOccupied(spot,dateStr);
                     let cellClass=res?'occupied':'free';
                     let cellContent='';
-                    if(res&&res.check_in_date===dateStr){
-                        cellContent=`<div class="reservation-text">${res.guest_name}</div>`;
-                        if(res.license_plate){
-                            cellContent+=`<div style="font-size:9px;color:#6b7280;">${res.license_plate}</div>`;
+                    let tooltipHTML='';
+                    if(res){
+                        // Mostra nome solo il primo giorno
+                        if(res.check_in_date===dateStr){
+                            cellContent=`<div class="reservation-text">${res.guest_name}</div>`;
+                            if(res.license_plate){
+                                cellContent+=`<div style="font-size:9px;color:#6b7280;">${res.license_plate}</div>`;
+                            }
                         }
+                        // Tooltip sempre presente
+                        tooltipHTML=`<span class="tooltip">${res.guest_name}${res.license_plate?' - '+res.license_plate:''}</span>`;
                     }
-                    bodyHTML+=`<td class="${cellClass}" onclick='openModal("${spot}","${dateStr}")'>${cellContent}</td>`;
+                    bodyHTML+=`<td class="${cellClass}" onclick='openModal("${spot}","${dateStr}")'>${cellContent}${tooltipHTML}</td>`;
                 }
                 bodyHTML+='</tr>';
             });
@@ -536,74 +579,4 @@
                 document.getElementById('modalTitle').textContent='Modifica';
                 document.getElementById('reservationId').value=res.id;
                 document.getElementById('guestName').value=res.guest_name;
-                document.getElementById('parkingSpot').value=res.spot;
-                document.getElementById('checkInDate').value=res.check_in_date;
-                document.getElementById('checkOutDate').value=res.check_out_date;
-                document.getElementById('licensePlate').value=res.license_plate||'';
-                document.getElementById('notes').value=res.notes||'';
-                document.getElementById('deleteBtn').style.display='block';
-            }else{
-                document.getElementById('modalTitle').textContent='Nuova';
-                document.getElementById('reservationId').value='';
-                document.getElementById('guestName').value='';
-                document.getElementById('parkingSpot').value=spot;
-                document.getElementById('checkInDate').value=dateStr;
-                document.getElementById('checkOutDate').value='';
-                document.getElementById('licensePlate').value='';
-                document.getElementById('notes').value='';
-                document.getElementById('deleteBtn').style.display='none';
-            }
-            document.getElementById('reservationModal').classList.add('active');
-        }
-        
-        function closeModal(){
-            document.getElementById('reservationModal').classList.remove('active');
-        }
-        
-        async function saveReservation(event){
-            event.preventDefault();
-            const id=document.getElementById('reservationId').value;
-            const data={
-                spot:document.getElementById('parkingSpot').value,
-                guest_name:document.getElementById('guestName').value,
-                check_in_date:document.getElementById('checkInDate').value,
-                check_out_date:document.getElementById('checkOutDate').value,
-                license_plate:document.getElementById('licensePlate').value,
-                notes:document.getElementById('notes').value
-            };
-            if(data.check_in_date>data.check_out_date){alert('⚠️ Data partenza dopo arrivo!');return;}
-            let result;
-            if(id){
-                result=await sb.from('reservations').update(data).eq('id',id);
-            }else{
-                result=await sb.from('reservations').insert([data]);
-            }
-            if(result.error){alert('❌ Errore salvataggio');return;}
-            closeModal();
-            alert('✅ Salvato!');
-            loadReservations();
-        }
-        
-        async function deleteReservation(){
-            if(!confirm('⚠️ Eliminare?'))return;
-            const id=document.getElementById('reservationId').value;
-            const{error}=await sb.from('reservations').delete().eq('id',id);
-            if(error){alert('❌ Errore');return;}
-            closeModal();
-            alert('🗑️ Eliminata!');
-            loadReservations();
-        }
-        
-        function searchGuest(){
-            const search=document.getElementById('searchGuest').value.toLowerCase();
-            const rows=document.querySelectorAll('#tableBody tr');
-            rows.forEach(row=>{
-                const found=row.textContent.toLowerCase().includes(search);
-                row.style.display=found||!search?'':'none';
-            });
-        }
-        
-        window.onload=init;
-    </script>
-</body>
-</html>
+                document.
