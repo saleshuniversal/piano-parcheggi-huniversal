@@ -719,78 +719,71 @@
         }
         
         function renderCalendar(){
-    cellReservationMap.clear();
-    const daysInMonth=getDaysInMonth(currentMonth,currentYear);
-    const tableHead=document.getElementById('tableHead');
-    const tableBody=document.getElementById('tableBody');
-    let headerHTML='<tr><th class="posto-header">Posto</th>';
-    for(let day=1;day<=daysInMonth;day++){
-        const date=new Date(currentYear,currentMonth,day);
-        const dayInitials=getDayInitials(date);
-        headerHTML+='<th>'+day+'<br><small style="font-size:9px;">'+dayInitials+'</small></th>';
-    }
-    headerHTML+='</tr>';
-    tableHead.innerHTML=headerHTML;
-    
-    let bodyHTML='';
-    
-    parkingSpots.forEach(spot=>{
-        const zoneClass=getZoneClass(spot);
-        const spotIcon=getSpotIcon(spot);
-        bodyHTML+='<tr class="'+zoneClass+'"><td class="posto-header">'+spot+spotIcon+'</td>';
-        
-        for(let day=1;day<=daysInMonth;day++){
-            // FIX: Crea la stringa data senza conversione UTC
-            const year=currentYear;
-            const month=String(currentMonth+1).padStart(2,'0');
-            const dayStr=String(day).padStart(2,'0');
-            const dateStr=`${year}-${month}-${dayStr}`;
-            
-            const resList=getReservationsForDate(spot,dateStr);
-            const cellKey=spot+'-'+dateStr;
-            
-            let cellClass='free';
-            let borderClass='';
-            let cellAttrs='';
-            
-            if(resList.length>0){
-                const res=resList[0];
-                cellReservationMap.set(cellKey,res);
-                
-                const isStart=(res.check_in_date===dateStr);
-                const checkOutDate=new Date(res.check_out_date+'T00:00:00');
-                const dayBeforeCheckout=new Date(checkOutDate);
-                dayBeforeCheckout.setDate(dayBeforeCheckout.getDate()-1);
-                const yearEnd=dayBeforeCheckout.getFullYear();
-                const monthEnd=String(dayBeforeCheckout.getMonth()+1).padStart(2,'0');
-                const dayEnd=String(dayBeforeCheckout.getDate()).padStart(2,'0');
-                const isEnd=(`${yearEnd}-${monthEnd}-${dayEnd}`===dateStr);
-                
-                if(isStart&&isEnd){
-                    borderClass='reservation-single';
-                }else if(isStart){
-                    borderClass='reservation-start';
-                }else if(isEnd){
-                    borderClass='reservation-end';
-                }
-                
-                if(resList.length>1){
-                    cellClass='occupied overbooking '+borderClass;
-                }else{
-                    cellClass='occupied '+borderClass;
-                }
-                
-                cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="hideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
-            }else{
-                cellAttrs='onclick="openModal(\''+spot+'\',\''+dateStr+'\')"';
+            cellReservationMap.clear();
+            const daysInMonth=getDaysInMonth(currentMonth,currentYear);
+            const tableHead=document.getElementById('tableHead');
+            const tableBody=document.getElementById('tableBody');
+            let headerHTML='<tr><th class="posto-header">Posto</th>';
+            for(let day=1;day<=daysInMonth;day++){
+                const date=new Date(currentYear,currentMonth,day);
+                const dayInitials=getDayInitials(date);
+                headerHTML+='<th>'+day+'<br><small style="font-size:9px;">'+dayInitials+'</small></th>';
             }
+            headerHTML+='</tr>';
+            tableHead.innerHTML=headerHTML;
             
-            bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' ondragover="handleDragOver(event)" ondrop="handleDrop(event,\''+spot+'\',\''+dateStr+'\')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)"></td>';
+            let bodyHTML='';
+            
+            parkingSpots.forEach(spot=>{
+                const zoneClass=getZoneClass(spot);
+                const spotIcon=getSpotIcon(spot);
+                bodyHTML+='<tr class="'+zoneClass+'"><td class="posto-header">'+spot+spotIcon+'</td>';
+                
+                for(let day=1;day<=daysInMonth;day++){
+                    const date=new Date(currentYear,currentMonth,day);
+                    const dateStr=date.toISOString().split('T')[0];
+                    const resList=getReservationsForDate(spot,dateStr);
+                    const cellKey=spot+'-'+dateStr;
+                    
+                    let cellClass='free';
+                    let borderClass='';
+                    let cellAttrs='';
+                    
+                    if(resList.length>0){
+                        const res=resList[0];
+                        cellReservationMap.set(cellKey,res);
+                        
+                        const isStart=(res.check_in_date===dateStr);
+                        const checkOutDate=new Date(res.check_out_date);
+                        const dayBeforeCheckout=new Date(checkOutDate);
+                        dayBeforeCheckout.setDate(dayBeforeCheckout.getDate()-1);
+                        const isEnd=(dayBeforeCheckout.toISOString().split('T')[0]===dateStr);
+                        
+                        if(isStart&&isEnd){
+                            borderClass='reservation-single';
+                        }else if(isStart){
+                            borderClass='reservation-start';
+                        }else if(isEnd){
+                            borderClass='reservation-end';
+                        }
+                        
+                        if(resList.length>1){
+                            cellClass='occupied overbooking '+borderClass;
+                        }else{
+                            cellClass='occupied '+borderClass;
+                        }
+                        
+                        cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="hideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
+                    }else{
+                        cellAttrs='onclick="openModal(\''+spot+'\',\''+dateStr+'\')"';
+                    }
+                    
+                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' ondragover="handleDragOver(event)" ondrop="handleDrop(event,\''+spot+'\',\''+dateStr+'\')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)"></td>';
+                }
+                bodyHTML+='</tr>';
+            });
+            tableBody.innerHTML=bodyHTML;
         }
-        bodyHTML+='</tr>';
-    });
-    tableBody.innerHTML=bodyHTML;
-}
         
         function openModalByDoubleClick(cellKey){
             const res=cellReservationMap.get(cellKey);
