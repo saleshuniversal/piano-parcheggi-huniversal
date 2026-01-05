@@ -291,7 +291,7 @@
             border: 3px dashed #f59e0b !important;
         }
         
-        /* Menu contestuale */
+        /* Menu contestuale - POSIZIONAMENTO FISSO VICINO AL CURSORE */
         #contextMenu {
             display: none;
             position: fixed;
@@ -299,8 +299,8 @@
             border: 1px solid #d1d5db;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            z-index: 10000;
-            min-width: 180px;
+            z-index: 10001;
+            min-width: 200px;
             padding: 4px 0;
         }
         
@@ -761,23 +761,48 @@
             return date.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
         }
         
-        // Menu contestuale
+        // Menu contestuale - POSIZIONAMENTO MIGLIORATO
         function setupContextMenu(){
-            document.addEventListener('click',function(){
-                document.getElementById('contextMenu').style.display='none';
+            // Chiudi menu quando clicchi altrove
+            document.addEventListener('click',function(e){
+                if(!e.target.closest('#contextMenu')){
+                    document.getElementById('contextMenu').style.display='none';
+                }
             });
             
+            // Gestisci tasto destro su TUTTE le celle occupate
             document.addEventListener('contextmenu',function(e){
-                if(e.target.classList.contains('occupied')){
+                const target=e.target.closest('td');
+                if(target && target.classList.contains('occupied')){
                     e.preventDefault();
-                    const cellKey=e.target.getAttribute('data-cell-key');
+                    const cellKey=target.getAttribute('data-cell-key');
                     contextMenuReservation=cellReservationMap.get(cellKey);
                     if(contextMenuReservation){
                         const menu=document.getElementById('contextMenu');
                         menu.style.display='block';
-                        menu.style.left=e.pageX+'px';
-                        menu.style.top=e.pageY+'px';
+                        
+                        // Posizionamento intelligente vicino al cursore
+                        const menuWidth=200;
+                        const menuHeight=120;
+                        
+                        let left=e.clientX+10;
+                        let top=e.clientY+10;
+                        
+                        // Se esce dallo schermo a destra, sposta a sinistra
+                        if(left+menuWidth>window.innerWidth){
+                            left=e.clientX-menuWidth-10;
+                        }
+                        
+                        // Se esce dallo schermo in basso, sposta sopra
+                        if(top+menuHeight>window.innerHeight){
+                            top=e.clientY-menuHeight-10;
+                        }
+                        
+                        menu.style.left=left+'px';
+                        menu.style.top=top+'px';
                     }
+                }else{
+                    document.getElementById('contextMenu').style.display='none';
                 }
             });
         }
