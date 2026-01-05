@@ -155,6 +155,7 @@
             border-collapse: separate;
             border-spacing: 0;
             font-size: 12px;
+            table-layout: fixed;
         }
         
         th {
@@ -167,6 +168,8 @@
             position: sticky;
             top: 0;
             z-index: 10;
+            width: 40px;
+            height: 60px;
         }
         
         th.posto-header {
@@ -174,14 +177,17 @@
             color: white;
             font-size: 13px;
             min-width: 100px;
+            width: 100px;
         }
         
         td {
             padding: 8px 4px;
             border: 1px solid #e5e7eb;
             vertical-align: top;
-            min-height: 60px;
+            width: 40px;
             height: 60px;
+            min-height: 60px;
+            max-height: 60px;
             cursor: pointer;
             transition: all 0.2s;
             font-size: 10px;
@@ -229,11 +235,13 @@
             border-right: 3px solid #dc2626 !important;
             border-top-right-radius: 8px;
             border-bottom-right-radius: 8px;
+            cursor: ew-resize !important;
         }
         
         .occupied.reservation-single {
             border: 3px solid #dc2626 !important;
             border-radius: 8px;
+            cursor: ew-resize !important;
         }
         
         /* Stili per le prenotazioni NON SPOSTABILI (viola) */
@@ -254,10 +262,12 @@
         
         .occupied.locked.reservation-end {
             border-right: 3px solid #9333ea !important;
+            cursor: ew-resize !important;
         }
         
         .occupied.locked.reservation-single {
             border: 3px solid #9333ea !important;
+            cursor: ew-resize !important;
         }
         
         /* Stile per overbooking */
@@ -291,7 +301,18 @@
             border: 3px dashed #f59e0b !important;
         }
         
-        /* Menu contestuale - POSIZIONAMENTO FISSO VICINO AL CURSORE */
+        /* Stile per resize */
+        .resizing {
+            opacity: 0.7;
+            border-right: 3px dashed #f59e0b !important;
+        }
+        
+        .resize-preview {
+            background: #fef3c7 !important;
+            opacity: 0.5;
+        }
+        
+        /* Menu contestuale */
         #contextMenu {
             display: none;
             position: fixed;
@@ -590,7 +611,7 @@
         
         <div class="info-banner">
             <strong>💡 Come funziona:</strong>
-            TRASCINA per spostare (rosso) • DOPPIO CLICK per modificare • TASTO DESTRO per menu • VIOLA = Non spostabile
+            TRASCINA cella rossa per spostare • TRASCINA cella finale per ridimensionare • TASTO DESTRO per menu • VIOLA = Non spostabile
         </div>
         
         <div class="legend">
@@ -612,6 +633,9 @@
     
     <!-- Menu contestuale -->
     <div id="contextMenu">
+        <div class="context-menu-item" id="menuMerge" style="display:none;" onclick="mergeReservationFromContext()">
+            🔗 Riunisci prenotazione
+        </div>
         <div class="context-menu-item" onclick="splitReservationFromContext()">
             ✂️ Dividi prenotazione
         </div>
@@ -690,6 +714,8 @@
         let currentHoveredCell = null;
         let tooltipHideTimer = null;
         let contextMenuReservation = null;
+        let resizingReservation = null;
+        let resizeStartDate = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -761,16 +787,24 @@
             return date.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
         }
         
-        // Menu contestuale - POSIZIONAMENTO MIGLIORATO
+        function formatDateDDMMYYYY(dateStr){
+            const[year,month,day]=dateStr.split('-');
+            return `${day}-${month}-${year}`;
+        }
+        
+        function parseDateDDMMYYYY(dateStr){
+            const[day,month,year]=dateStr.split('-');
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Menu contestuale
         function setupContextMenu(){
-            // Chiudi menu quando clicchi altrove
             document.addEventListener('click',function(e){
                 if(!e.target.closest('#contextMenu')){
                     document.getElementById('contextMenu').style.display='none';
                 }
             });
             
-            // Gestisci tasto destro su TUTTE le celle occupate
             document.addEventListener('contextmenu',function(e){
                 const target=e.target.closest('td');
                 if(target && target.classList.contains('occupied')){
@@ -779,21 +813,27 @@
                     contextMenuReservation=cellReservationMap.get(cellKey);
                     if(contextMenuReservation){
                         const menu=document.getElementById('contextMenu');
+                        
+                        // Mostra "Riunisci" solo se la prenotazione è divisa
+                        const mergeItem=document.getElementById('menuMerge');
+                        if(contextMenuReservation.notes && contextMenuReservation.notes.includes('🔗 Collegata')){
+                            mergeItem.style.display='flex';
+                        }else{
+                            mergeItem.style.display='none';
+                        }
+                        
                         menu.style.display='block';
                         
-                        // Posizionamento intelligente vicino al cursore
                         const menuWidth=200;
-                        const menuHeight=120;
+                        const menuHeight=160;
                         
                         let left=e.clientX+10;
                         let top=e.clientY+10;
                         
-                        // Se esce dallo schermo a destra, sposta a sinistra
                         if(left+menuWidth>window.innerWidth){
                             left=e.clientX-menuWidth-10;
                         }
                         
-                        // Se esce dallo schermo in basso, sposta sopra
                         if(top+menuHeight>window.innerHeight){
                             top=e.clientY-menuHeight-10;
                         }
@@ -827,25 +867,83 @@
             loadReservations();
         }
         
+        async function mergeReservationFromContext(){
+            document.getElementById('contextMenu').style.display='none';
+            if(!contextMenuReservation)return;
+            
+            const res=contextMenuReservation;
+            
+            // Cerca la prenotazione collegata
+            const linkedReservations=reservations.filter(r=>
+                r.id!==res.id && 
+                r.guest_name===res.guest_name && 
+                r.notes && 
+                r.notes.includes('🔗 Collegata')
+            );
+            
+            if(linkedReservations.length===0){
+                alert('❌ Nessuna prenotazione collegata trovata');
+                return;
+            }
+            
+            const linked=linkedReservations[0];
+            
+            // Determina quale viene prima
+            const firstRes=(res.check_in_date<linked.check_in_date)?res:linked;
+            const secondRes=(res.check_in_date<linked.check_in_date)?linked:res;
+            
+            if(!confirm('🔗 Riunire queste prenotazioni?\n\n'+firstRes.spot+': '+formatDate(firstRes.check_in_date)+' → '+formatDate(firstRes.check_out_date)+'\n'+secondRes.spot+': '+formatDate(secondRes.check_in_date)+' → '+formatDate(secondRes.check_out_date)+'\n\nDiventerà:\n'+firstRes.spot+': '+formatDate(firstRes.check_in_date)+' → '+formatDate(secondRes.check_out_date))){
+                return;
+            }
+            
+            // Crea prenotazione unificata
+            const merged={
+                spot:firstRes.spot,
+                guest_name:firstRes.guest_name,
+                check_in_date:firstRes.check_in_date,
+                check_out_date:secondRes.check_out_date,
+                license_plate:firstRes.license_plate||'',
+                notes:(firstRes.notes||'').replace(/🔗 Collegata[^\n]*/g,'').trim(),
+                non_spostare:firstRes.non_spostare||false
+            };
+            
+            // Elimina le due prenotazioni
+            await sb.from('reservations').delete().eq('id',firstRes.id);
+            await sb.from('reservations').delete().eq('id',secondRes.id);
+            
+            // Inserisci la nuova
+            const{error}=await sb.from('reservations').insert([merged]);
+            if(error){
+                alert('❌ Errore nella riunione');
+                return;
+            }
+            
+            alert('✅ Prenotazioni riunite con successo!');
+            loadReservations();
+        }
+        
         async function splitReservationFromContext(){
             document.getElementById('contextMenu').style.display='none';
             if(!contextMenuReservation)return;
             
             const res=contextMenuReservation;
             
-            // Chiedi data di split
-            const splitDate=prompt('📅 Dividi alla data (formato AAAA-MM-GG):\n\nEsempio: 2026-01-10\n\nLa prenotazione sarà divisa in:\n- Prima parte: dal '+res.check_in_date+' fino alla data scelta\n- Seconda parte: dalla data scelta al '+res.check_out_date);
+            // Chiedi data di split - FORMATO GG-MM-AAAA
+            const splitDateInput=prompt('📅 Dividi alla data (formato GG-MM-AAAA):\n\nEsempio: 10-01-2026\n\nLa prenotazione sarà divisa in:\n- Prima parte: dal '+formatDateDDMMYYYY(res.check_in_date)+' fino alla data scelta\n- Seconda parte: dalla data scelta al '+formatDateDDMMYYYY(res.check_out_date));
             
-            if(!splitDate)return;
+            if(!splitDateInput)return;
+            
+            // Converti da GG-MM-AAAA a AAAA-MM-GG
+            const splitDate=parseDateDDMMYYYY(splitDateInput);
             
             // Validazione data
             if(splitDate<=res.check_in_date||splitDate>=res.check_out_date){
-                alert('❌ La data deve essere tra '+res.check_in_date+' e '+res.check_out_date);
+                alert('❌ La data deve essere tra '+formatDateDDMMYYYY(res.check_in_date)+' e '+formatDateDDMMYYYY(res.check_out_date));
                 return;
             }
             
-            // Chiedi nuovo posto per la seconda parte
-            const newSpot=prompt('🅿️ Nuovo posto per la seconda parte (dal '+splitDate+' al '+res.check_out_date+'):\n\nEsempio: PK 7\n\nPosti disponibili:\n'+parkingSpots.join(', '));
+            // Chiedi nuovo posto
+            const newSpot=prompt('🅿️ Nuovo posto per la seconda parte (dal '+formatDateDDMMYYYY(splitDate)+' al '+formatDateDDMMYYYY(res.check_out_date)+'):\n\nEsempio: PK 7\n\nPosti disponibili:\n'+parkingSpots.join(', '));
             
             if(!newSpot||!parkingSpots.includes(newSpot)){
                 alert('❌ Posto non valido');
@@ -859,7 +957,7 @@
                 check_in_date:res.check_in_date,
                 check_out_date:splitDate,
                 license_plate:res.license_plate||'',
-                notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+newSpot+' dal '+splitDate,
+                notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+newSpot+' dal '+formatDateDDMMYYYY(splitDate),
                 non_spostare:res.non_spostare||false
             };
             
@@ -869,25 +967,21 @@
                 check_in_date:splitDate,
                 check_out_date:res.check_out_date,
                 license_plate:res.license_plate||'',
-                notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+res.spot+' fino al '+splitDate,
+                notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+res.spot+' fino al '+formatDateDDMMYYYY(splitDate),
                 non_spostare:res.non_spostare||false
             };
             
-            // Elimina la prenotazione originale
-            const{error:deleteError}=await sb.from('reservations').delete().eq('id',res.id);
-            if(deleteError){
-                alert('❌ Errore nell\'eliminazione della prenotazione originale');
-                return;
-            }
+            // Elimina originale
+            await sb.from('reservations').delete().eq('id',res.id);
             
             // Inserisci le due nuove
-            const{error:insertError}=await sb.from('reservations').insert([firstPart,secondPart]);
-            if(insertError){
+            const{error}=await sb.from('reservations').insert([firstPart,secondPart]);
+            if(error){
                 alert('❌ Errore nella creazione delle prenotazioni divise');
                 return;
             }
             
-            alert('✅ Prenotazione divisa con successo!\n\n✂️ Prima parte: '+res.spot+' ('+res.check_in_date+' → '+splitDate+')\n✂️ Seconda parte: '+newSpot+' ('+splitDate+' → '+res.check_out_date+')');
+            alert('✅ Prenotazione divisa con successo!\n\n✂️ Prima parte: '+res.spot+' ('+formatDateDDMMYYYY(res.check_in_date)+' → '+formatDateDDMMYYYY(splitDate)+')\n✂️ Seconda parte: '+newSpot+' ('+formatDateDDMMYYYY(splitDate)+' → '+formatDateDDMMYYYY(res.check_out_date)+')');
             loadReservations();
         }
         
@@ -1072,21 +1166,104 @@
                             cellClass='occupied '+borderClass;
                         }
                         
-                        // Attributi
-                        if(res.non_spostare){
+                        // Attributi - Gestisce resize vs drag
+                        const isEndCell=(isEnd||isStart&&isEnd);
+                        
+                        if(isEndCell){
+                            // Cella finale - RESIZE
+                            cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" data-is-end="true" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" onmousedown="handleResizeStart(event,\''+cellKey+'\')" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
+                        }else if(res.non_spostare){
+                            // Locked - NO DRAG
                             cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
                         }else{
+                            // Normale - DRAG
                             cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
                         }
                     }else{
                         cellAttrs='onclick="openModal(\''+spot+'\',\''+dateStr+'\')"';
                     }
                     
-                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' ondragover="handleDragOver(event)" ondrop="handleDrop(event,\''+spot+'\',\''+dateStr+'\')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)">'+cellContent+'</td>';
+                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' ondragover="handleDragOver(event)" ondrop="handleDrop(event,\''+spot+'\',\''+dateStr+'\')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" data-date="'+dateStr+'" data-spot="'+spot+'">'+cellContent+'</td>';
                 }
                 bodyHTML+='</tr>';
             });
             tableBody.innerHTML=bodyHTML;
+        }
+        
+        // RESIZE FUNCTIONS
+        function handleResizeStart(event,cellKey){
+            event.preventDefault();
+            const res=cellReservationMap.get(cellKey);
+            if(!res)return;
+            
+            resizingReservation=res;
+            resizeStartDate=event.currentTarget.getAttribute('data-date');
+            
+            event.currentTarget.classList.add('resizing');
+            hideTooltip();
+            
+            document.addEventListener('mousemove',handleResizeMove);
+            document.addEventListener('mouseup',handleResizeEnd);
+        }
+        
+        function handleResizeMove(event){
+            if(!resizingReservation)return;
+            
+            const target=document.elementFromPoint(event.clientX,event.clientY);
+            if(target&&target.tagName==='TD'&&target.getAttribute('data-spot')===resizingReservation.spot){
+                // Rimuovi preview precedenti
+                document.querySelectorAll('.resize-preview').forEach(el=>el.classList.remove('resize-preview'));
+                
+                const newDate=target.getAttribute('data-date');
+                if(newDate&&newDate>=resizingReservation.check_in_date){
+                    // Aggiungi preview
+                    const allCells=document.querySelectorAll(`td[data-spot="${resizingReservation.spot}"]`);
+                    allCells.forEach(cell=>{
+                        const cellDate=cell.getAttribute('data-date');
+                        if(cellDate&&cellDate>=resizingReservation.check_in_date&&cellDate<=newDate){
+                            cell.classList.add('resize-preview');
+                        }
+                    });
+                }
+            }
+        }
+        
+        async function handleResizeEnd(event){
+            document.removeEventListener('mousemove',handleResizeMove);
+            document.removeEventListener('mouseup',handleResizeEnd);
+            
+            document.querySelectorAll('.resizing').forEach(el=>el.classList.remove('resizing'));
+            document.querySelectorAll('.resize-preview').forEach(el=>el.classList.remove('resize-preview'));
+            
+            if(!resizingReservation)return;
+            
+            const target=document.elementFromPoint(event.clientX,event.clientY);
+            if(target&&target.tagName==='TD'){
+                const newEndDate=target.getAttribute('data-date');
+                const spot=target.getAttribute('data-spot');
+                
+                if(newEndDate&&spot===resizingReservation.spot&&newEndDate>=resizingReservation.check_in_date){
+                    // Calcola il nuovo check_out (giorno dopo l'ultima cella)
+                    const lastDay=new Date(newEndDate+'T00:00:00');
+                    lastDay.setDate(lastDay.getDate()+1);
+                    const newCheckOut=lastDay.toISOString().split('T')[0];
+                    
+                    if(newCheckOut!==resizingReservation.check_out_date){
+                        const{error}=await sb.from('reservations').update({
+                            check_out_date:newCheckOut
+                        }).eq('id',resizingReservation.id);
+                        
+                        if(error){
+                            alert('❌ Errore nel ridimensionamento');
+                        }else{
+                            loadReservations();
+                        }
+                    }
+                }
+            }
+            
+            resizingReservation=null;
+            resizeStartDate=null;
         }
         
         function openModalByDoubleClick(cellKey){
