@@ -185,6 +185,7 @@
             transition: all 0.2s;
             font-size: 10px;
             position: relative;
+            overflow: hidden;
         }
         
         td:not(.occupied):hover {
@@ -193,7 +194,19 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         
-        /* Stili per le prenotazioni con bordi continui */
+        /* Testo nome ospite nella cella */
+        .guest-name-cell {
+            font-size: 7px;
+            font-weight: 700;
+            color: #7f1d1d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            pointer-events: none;
+            line-height: 1.2;
+        }
+        
+        /* Stili per le prenotazioni NORMALI (rosse) */
         .occupied {
             background: #fee2e2;
             border-top: 3px solid #dc2626 !important;
@@ -220,6 +233,30 @@
         .occupied.reservation-single {
             border: 3px solid #dc2626 !important;
             border-radius: 8px;
+        }
+        
+        /* Stili per le prenotazioni NON SPOSTABILI (viola) */
+        .occupied.locked {
+            background: #e9d5ff !important;
+            border-top: 3px solid #9333ea !important;
+            border-bottom: 3px solid #9333ea !important;
+            cursor: not-allowed !important;
+        }
+        
+        .occupied.locked .guest-name-cell {
+            color: #581c87;
+        }
+        
+        .occupied.locked.reservation-start {
+            border-left: 3px solid #9333ea !important;
+        }
+        
+        .occupied.locked.reservation-end {
+            border-right: 3px solid #9333ea !important;
+        }
+        
+        .occupied.locked.reservation-single {
+            border: 3px solid #9333ea !important;
         }
         
         /* Stile per overbooking */
@@ -253,7 +290,7 @@
             border: 3px dashed #f59e0b !important;
         }
         
-        /* Tooltip migliorato - posizionato SOPRA la cella */
+        /* Tooltip migliorato */
         #globalTooltip {
             visibility: hidden;
             position: fixed;
@@ -413,6 +450,29 @@
             min-height: 80px;
         }
         
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: #f3f4f6;
+            border-radius: 6px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+            font-weight: 600;
+            color: #374151;
+        }
+        
         .modal-actions {
             display: flex;
             gap: 10px;
@@ -491,12 +551,13 @@
         
         <div class="info-banner">
             <strong>💡 Come funziona:</strong>
-            TRASCINA per spostare • DOPPIO CLICK per modificare • Passa il MOUSE per vedere dettagli e pulsanti
+            TRASCINA per spostare (rosso) • DOPPIO CLICK per modificare • VIOLA = Non spostabile • Passa il MOUSE per dettagli
         </div>
         
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 3px solid #dc2626; border-radius: 4px;"></div><span>Occupato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #e9d5ff; border: 3px solid #9333ea; border-radius: 4px;"></div><span>Non spostabile</span></div>
             <div class="legend-item"><div class="legend-color" style="background: repeating-linear-gradient(45deg, #fca5a5, #fca5a5 5px, #ef4444 5px, #ef4444 10px); border-radius: 4px;"></div><span>Overbooking</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>PK 16-17 ⚡</span></div>
         </div>
@@ -541,6 +602,10 @@
                 <div class="form-group">
                     <label>Note</label>
                     <textarea id="notes"></textarea>
+                </div>
+                <div class="checkbox-group">
+                    <input type="checkbox" id="nonSpostare">
+                    <label for="nonSpostare">🔒 Non spostare (prenotazione fissa - colore viola)</label>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-danger" onclick="deleteReservation()" id="deleteBtn" style="display: none;">🗑️ Elimina</button>
@@ -645,7 +710,6 @@
             const res=cellReservationMap.get(cellKey);
             if(!res)return;
             
-            // Cancella qualsiasi timer di nascondimento
             if(tooltipHideTimer){
                 clearTimeout(tooltipHideTimer);
                 tooltipHideTimer=null;
@@ -664,6 +728,9 @@
             if(res.notes){
                 html+='<div class="tooltip-row"><span class="tooltip-label">Note:</span><span class="tooltip-value">'+res.notes+'</span></div>';
             }
+            if(res.non_spostare){
+                html+='<div class="tooltip-row"><span class="tooltip-label">Stato:</span><span class="tooltip-value">🔒 Non spostabile</span></div>';
+            }
             html+='<div class="tooltip-actions">';
             html+='<button class="tooltip-btn tooltip-btn-edit" onclick="editFromTooltip(\''+cellKey+'\')">✏️ Modifica</button>';
             html+='<button class="tooltip-btn tooltip-btn-delete" onclick="deleteFromTooltip(\''+cellKey+'\')">🗑️ Elimina</button>';
@@ -675,7 +742,6 @@
         }
         
         function scheduleHideTooltip(){
-            // Aspetta 300ms prima di nascondere
             tooltipHideTimer=setTimeout(function(){
                 hideTooltip();
             },300);
@@ -791,6 +857,7 @@
                     let cellClass='free';
                     let borderClass='';
                     let cellAttrs='';
+                    let cellContent='';
                     
                     if(resList.length>0){
                         const res=resList[0];
@@ -813,18 +880,29 @@
                             borderClass='reservation-end';
                         }
                         
+                        // Nome ospite nella cella
+                        cellContent='<div class="guest-name-cell">'+res.guest_name+'</div>';
+                        
+                        // Determina lo stile (normale, locked, overbooking)
                         if(resList.length>1){
                             cellClass='occupied overbooking '+borderClass;
+                        }else if(res.non_spostare){
+                            cellClass='occupied locked '+borderClass;
                         }else{
                             cellClass='occupied '+borderClass;
                         }
                         
-                        cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
+                        // Attributi: se locked, non è draggable
+                        if(res.non_spostare){
+                            cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
+                        }else{
+                            cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
+                        }
                     }else{
                         cellAttrs='onclick="openModal(\''+spot+'\',\''+dateStr+'\')"';
                     }
                     
-                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' ondragover="handleDragOver(event)" ondrop="handleDrop(event,\''+spot+'\',\''+dateStr+'\')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)"></td>';
+                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' ondragover="handleDragOver(event)" ondrop="handleDrop(event,\''+spot+'\',\''+dateStr+'\')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)">'+cellContent+'</td>';
                 }
                 bodyHTML+='</tr>';
             });
@@ -841,6 +919,10 @@
         function handleDragStart(event,cellKey){
             const res=cellReservationMap.get(cellKey);
             if(!res)return;
+            if(res.non_spostare){
+                event.preventDefault();
+                return;
+            }
             draggedReservation=res;
             event.currentTarget.classList.add('dragging');
             hideTooltip();
@@ -897,6 +979,7 @@
             document.getElementById('checkOutDate').value='';
             document.getElementById('licensePlate').value='';
             document.getElementById('notes').value='';
+            document.getElementById('nonSpostare').checked=false;
             document.getElementById('deleteBtn').style.display='none';
             document.getElementById('reservationModal').classList.add('active');
         }
@@ -910,6 +993,7 @@
             document.getElementById('checkOutDate').value=res.check_out_date;
             document.getElementById('licensePlate').value=res.license_plate||'';
             document.getElementById('notes').value=res.notes||'';
+            document.getElementById('nonSpostare').checked=res.non_spostare||false;
             document.getElementById('deleteBtn').style.display='block';
             document.getElementById('reservationModal').classList.add('active');
         }
@@ -927,6 +1011,7 @@
                 document.getElementById('checkOutDate').value='';
                 document.getElementById('licensePlate').value='';
                 document.getElementById('notes').value='';
+                document.getElementById('nonSpostare').checked=false;
                 document.getElementById('deleteBtn').style.display='none';
                 document.getElementById('reservationModal').classList.add('active');
             }
@@ -945,7 +1030,8 @@
                 check_in_date:document.getElementById('checkInDate').value,
                 check_out_date:document.getElementById('checkOutDate').value,
                 license_plate:document.getElementById('licensePlate').value,
-                notes:document.getElementById('notes').value
+                notes:document.getElementById('notes').value,
+                non_spostare:document.getElementById('nonSpostare').checked
             };
             if(data.check_in_date>=data.check_out_date){
                 alert('⚠️ La data di partenza deve essere successiva alla data di arrivo!');
