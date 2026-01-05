@@ -181,6 +181,7 @@
             border: 1px solid #e5e7eb;
             vertical-align: top;
             min-height: 60px;
+            height: 60px;
             cursor: pointer;
             transition: all 0.2s;
             font-size: 10px;
@@ -194,7 +195,7 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         
-        /* Testo nome ospite nella cella */
+        /* Testo nome ospite nella cella - SOLO PRIMA CELLA */
         .guest-name-cell {
             font-size: 7px;
             font-weight: 700;
@@ -288,6 +289,44 @@
         .drag-over {
             background: #fef3c7 !important;
             border: 3px dashed #f59e0b !important;
+        }
+        
+        /* Menu contestuale */
+        #contextMenu {
+            display: none;
+            position: fixed;
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 10000;
+            min-width: 180px;
+            padding: 4px 0;
+        }
+        
+        .context-menu-item {
+            padding: 10px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background 0.2s;
+        }
+        
+        .context-menu-item:hover {
+            background: #f3f4f6;
+        }
+        
+        .context-menu-item.danger:hover {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .context-menu-separator {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 4px 0;
         }
         
         /* Tooltip migliorato */
@@ -551,7 +590,7 @@
         
         <div class="info-banner">
             <strong>💡 Come funziona:</strong>
-            TRASCINA per spostare (rosso) • DOPPIO CLICK per modificare • VIOLA = Non spostabile • Passa il MOUSE per dettagli
+            TRASCINA per spostare (rosso) • DOPPIO CLICK per modificare • TASTO DESTRO per menu • VIOLA = Non spostabile
         </div>
         
         <div class="legend">
@@ -568,6 +607,20 @@
                 <thead id="tableHead"></thead>
                 <tbody id="tableBody"></tbody>
             </table>
+        </div>
+    </div>
+    
+    <!-- Menu contestuale -->
+    <div id="contextMenu">
+        <div class="context-menu-item" onclick="splitReservationFromContext()">
+            ✂️ Dividi prenotazione
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" onclick="editFromContext()">
+            ✏️ Modifica
+        </div>
+        <div class="context-menu-item danger" onclick="deleteFromContext()">
+            🗑️ Elimina
         </div>
     </div>
     
@@ -636,6 +689,7 @@
         let cellReservationMap = new Map();
         let currentHoveredCell = null;
         let tooltipHideTimer = null;
+        let contextMenuReservation = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -668,6 +722,7 @@
             document.getElementById('monthSelect').value=currentMonth;
             document.getElementById('yearSelect').value=currentYear;
             setupTooltipEvents();
+            setupContextMenu();
             loadReservations();
             sb.channel('reservations_changes').on('postgres_changes',{event:'*',schema:'public',table:'reservations'},()=>{loadReservations();}).subscribe();
         }
@@ -704,6 +759,111 @@
         function formatDate(dateStr){
             const date=new Date(dateStr+'T00:00:00');
             return date.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
+        }
+        
+        // Menu contestuale
+        function setupContextMenu(){
+            document.addEventListener('click',function(){
+                document.getElementById('contextMenu').style.display='none';
+            });
+            
+            document.addEventListener('contextmenu',function(e){
+                if(e.target.classList.contains('occupied')){
+                    e.preventDefault();
+                    const cellKey=e.target.getAttribute('data-cell-key');
+                    contextMenuReservation=cellReservationMap.get(cellKey);
+                    if(contextMenuReservation){
+                        const menu=document.getElementById('contextMenu');
+                        menu.style.display='block';
+                        menu.style.left=e.pageX+'px';
+                        menu.style.top=e.pageY+'px';
+                    }
+                }
+            });
+        }
+        
+        function editFromContext(){
+            if(contextMenuReservation){
+                openModalWithReservation(contextMenuReservation);
+            }
+            document.getElementById('contextMenu').style.display='none';
+        }
+        
+        async function deleteFromContext(){
+            document.getElementById('contextMenu').style.display='none';
+            if(!contextMenuReservation)return;
+            if(!confirm('⚠️ Sei sicuro di voler eliminare la prenotazione di '+contextMenuReservation.guest_name+'?'))return;
+            const{error}=await sb.from('reservations').delete().eq('id',contextMenuReservation.id);
+            if(error){
+                alert('❌ Errore nell\'eliminazione');
+                return;
+            }
+            alert('🗑️ Prenotazione eliminata!');
+            loadReservations();
+        }
+        
+        async function splitReservationFromContext(){
+            document.getElementById('contextMenu').style.display='none';
+            if(!contextMenuReservation)return;
+            
+            const res=contextMenuReservation;
+            
+            // Chiedi data di split
+            const splitDate=prompt('📅 Dividi alla data (formato AAAA-MM-GG):\n\nEsempio: 2026-01-10\n\nLa prenotazione sarà divisa in:\n- Prima parte: dal '+res.check_in_date+' fino alla data scelta\n- Seconda parte: dalla data scelta al '+res.check_out_date);
+            
+            if(!splitDate)return;
+            
+            // Validazione data
+            if(splitDate<=res.check_in_date||splitDate>=res.check_out_date){
+                alert('❌ La data deve essere tra '+res.check_in_date+' e '+res.check_out_date);
+                return;
+            }
+            
+            // Chiedi nuovo posto per la seconda parte
+            const newSpot=prompt('🅿️ Nuovo posto per la seconda parte (dal '+splitDate+' al '+res.check_out_date+'):\n\nEsempio: PK 7\n\nPosti disponibili:\n'+parkingSpots.join(', '));
+            
+            if(!newSpot||!parkingSpots.includes(newSpot)){
+                alert('❌ Posto non valido');
+                return;
+            }
+            
+            // Crea le due prenotazioni
+            const firstPart={
+                spot:res.spot,
+                guest_name:res.guest_name,
+                check_in_date:res.check_in_date,
+                check_out_date:splitDate,
+                license_plate:res.license_plate||'',
+                notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+newSpot+' dal '+splitDate,
+                non_spostare:res.non_spostare||false
+            };
+            
+            const secondPart={
+                spot:newSpot,
+                guest_name:res.guest_name,
+                check_in_date:splitDate,
+                check_out_date:res.check_out_date,
+                license_plate:res.license_plate||'',
+                notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+res.spot+' fino al '+splitDate,
+                non_spostare:res.non_spostare||false
+            };
+            
+            // Elimina la prenotazione originale
+            const{error:deleteError}=await sb.from('reservations').delete().eq('id',res.id);
+            if(deleteError){
+                alert('❌ Errore nell\'eliminazione della prenotazione originale');
+                return;
+            }
+            
+            // Inserisci le due nuove
+            const{error:insertError}=await sb.from('reservations').insert([firstPart,secondPart]);
+            if(insertError){
+                alert('❌ Errore nella creazione delle prenotazioni divise');
+                return;
+            }
+            
+            alert('✅ Prenotazione divisa con successo!\n\n✂️ Prima parte: '+res.spot+' ('+res.check_in_date+' → '+splitDate+')\n✂️ Seconda parte: '+newSpot+' ('+splitDate+' → '+res.check_out_date+')');
+            loadReservations();
         }
         
         function showTooltip(event,cellKey){
@@ -796,13 +956,6 @@
             });
         }
         
-        document.addEventListener('click',function(e){
-            const tooltip=document.getElementById('globalTooltip');
-            if(tooltip.style.visibility==='visible'&&!tooltip.contains(e.target)&&!e.target.classList.contains('occupied')){
-                hideTooltip();
-            }
-        });
-        
         function editFromTooltip(cellKey){
             hideTooltip();
             const res=cellReservationMap.get(cellKey);
@@ -880,10 +1033,12 @@
                             borderClass='reservation-end';
                         }
                         
-                        // Nome ospite nella cella
-                        cellContent='<div class="guest-name-cell">'+res.guest_name+'</div>';
+                        // Nome ospite SOLO sulla prima cella
+                        if(isStart){
+                            cellContent='<div class="guest-name-cell">'+res.guest_name+'</div>';
+                        }
                         
-                        // Determina lo stile (normale, locked, overbooking)
+                        // Determina lo stile
                         if(resList.length>1){
                             cellClass='occupied overbooking '+borderClass;
                         }else if(res.non_spostare){
@@ -892,7 +1047,7 @@
                             cellClass='occupied '+borderClass;
                         }
                         
-                        // Attributi: se locked, non è draggable
+                        // Attributi
                         if(res.non_spostare){
                             cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
                         }else{
