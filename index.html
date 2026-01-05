@@ -570,6 +570,7 @@
         let draggedReservation = null;
         let cellReservationMap = new Map();
         let currentHoveredCell = null;
+        let tooltipHideTimer = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -601,6 +602,7 @@
             populateParkingSpots();
             document.getElementById('monthSelect').value=currentMonth;
             document.getElementById('yearSelect').value=currentYear;
+            setupTooltipEvents();
             loadReservations();
             sb.channel('reservations_changes').on('postgres_changes',{event:'*',schema:'public',table:'reservations'},()=>{loadReservations();}).subscribe();
         }
@@ -643,6 +645,12 @@
             const res=cellReservationMap.get(cellKey);
             if(!res)return;
             
+            // Cancella qualsiasi timer di nascondimento
+            if(tooltipHideTimer){
+                clearTimeout(tooltipHideTimer);
+                tooltipHideTimer=null;
+            }
+            
             currentHoveredCell=event.currentTarget;
             
             const tooltip=document.getElementById('globalTooltip');
@@ -666,21 +674,32 @@
             positionTooltip(event.currentTarget);
         }
         
+        function scheduleHideTooltip(){
+            // Aspetta 300ms prima di nascondere
+            tooltipHideTimer=setTimeout(function(){
+                hideTooltip();
+            },300);
+        }
+        
+        function cancelHideTooltip(){
+            if(tooltipHideTimer){
+                clearTimeout(tooltipHideTimer);
+                tooltipHideTimer=null;
+            }
+        }
+        
         function positionTooltip(cell){
             const tooltip=document.getElementById('globalTooltip');
             const rect=cell.getBoundingClientRect();
             
-            // Posiziona il tooltip SOPRA la cella
             const tooltipHeight=tooltip.offsetHeight;
             let top=rect.top-tooltipHeight-10;
             let left=rect.left+(rect.width/2)-(tooltip.offsetWidth/2);
             
-            // Se il tooltip esce sopra, mettilo sotto
             if(top<0){
                 top=rect.bottom+10;
             }
             
-            // Se il tooltip esce a sinistra o destra, aggiusta
             if(left<10){
                 left=10;
             }
@@ -695,7 +714,28 @@
         function hideTooltip(){
             document.getElementById('globalTooltip').style.visibility='hidden';
             currentHoveredCell=null;
+            if(tooltipHideTimer){
+                clearTimeout(tooltipHideTimer);
+                tooltipHideTimer=null;
+            }
         }
+        
+        function setupTooltipEvents(){
+            const tooltip=document.getElementById('globalTooltip');
+            tooltip.addEventListener('mouseenter',function(){
+                cancelHideTooltip();
+            });
+            tooltip.addEventListener('mouseleave',function(){
+                hideTooltip();
+            });
+        }
+        
+        document.addEventListener('click',function(e){
+            const tooltip=document.getElementById('globalTooltip');
+            if(tooltip.style.visibility==='visible'&&!tooltip.contains(e.target)&&!e.target.classList.contains('occupied')){
+                hideTooltip();
+            }
+        });
         
         function editFromTooltip(cellKey){
             hideTooltip();
@@ -740,8 +780,11 @@
                 bodyHTML+='<tr class="'+zoneClass+'"><td class="posto-header">'+spot+spotIcon+'</td>';
                 
                 for(let day=1;day<=daysInMonth;day++){
-                    const date=new Date(currentYear,currentMonth,day);
-                    const dateStr=date.toISOString().split('T')[0];
+                    const year=currentYear;
+                    const month=String(currentMonth+1).padStart(2,'0');
+                    const dayStr=String(day).padStart(2,'0');
+                    const dateStr=`${year}-${month}-${dayStr}`;
+                    
                     const resList=getReservationsForDate(spot,dateStr);
                     const cellKey=spot+'-'+dateStr;
                     
@@ -754,10 +797,13 @@
                         cellReservationMap.set(cellKey,res);
                         
                         const isStart=(res.check_in_date===dateStr);
-                        const checkOutDate=new Date(res.check_out_date);
+                        const checkOutDate=new Date(res.check_out_date+'T00:00:00');
                         const dayBeforeCheckout=new Date(checkOutDate);
                         dayBeforeCheckout.setDate(dayBeforeCheckout.getDate()-1);
-                        const isEnd=(dayBeforeCheckout.toISOString().split('T')[0]===dateStr);
+                        const yearEnd=dayBeforeCheckout.getFullYear();
+                        const monthEnd=String(dayBeforeCheckout.getMonth()+1).padStart(2,'0');
+                        const dayEnd=String(dayBeforeCheckout.getDate()).padStart(2,'0');
+                        const isEnd=(`${yearEnd}-${monthEnd}-${dayEnd}`===dateStr);
                         
                         if(isStart&&isEnd){
                             borderClass='reservation-single';
@@ -773,7 +819,7 @@
                             cellClass='occupied '+borderClass;
                         }
                         
-                        cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="hideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
+                        cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
                     }else{
                         cellAttrs='onclick="openModal(\''+spot+'\',\''+dateStr+'\')"';
                     }
