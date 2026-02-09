@@ -154,13 +154,13 @@
             width: 100%;
             border-collapse: separate;
             border-spacing: 0;
-            font-size: 12px;
+            font-size: 11px;
             table-layout: fixed;
         }
         
         th {
             background: #f3f4f6;
-            padding: 8px 4px;
+            padding: 5px 2px;
             text-align: center;
             font-weight: 600;
             color: #374151;
@@ -168,31 +168,32 @@
             position: sticky;
             top: 0;
             z-index: 10;
-            width: 40px;
-            height: 60px;
+            width: 35px;
+            height: 35px;
+            font-size: 10px;
         }
         
         th.posto-header {
             background: #1e3a8a;
             color: white;
-            font-size: 13px;
-            min-width: 100px;
-            width: 100px;
+            font-size: 11px;
+            min-width: 90px;
+            width: 90px;
         }
         
         td {
-            padding: 8px 4px;
+            padding: 2px;
             border: 1px solid #e5e7eb;
-            vertical-align: top;
-            width: 40px;
-            height: 60px;
-            min-height: 60px;
-            max-height: 60px;
+            vertical-align: middle;
+            width: 35px;
+            height: 35px;
+            min-height: 35px;
+            max-height: 35px;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 10px;
+            font-size: 8px;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
         }
         
         td:not(.occupied):hover {
@@ -201,23 +202,28 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         
-        /* Testo nome ospite nella cella - SOLO PRIMA CELLA */
-        .guest-name-cell {
+        /* Nome ospite esteso su tutta la prenotazione */
+        .guest-name-extended {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
             font-size: 7px;
             font-weight: 700;
             color: #7f1d1d;
             white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            text-align: center;
             pointer-events: none;
-            line-height: 1.2;
+            z-index: 1;
+            padding: 0 2px;
         }
         
         /* Stili per le prenotazioni NORMALI (rosse) */
         .occupied {
             background: #fee2e2;
-            border-top: 3px solid #dc2626 !important;
-            border-bottom: 3px solid #dc2626 !important;
+            border-top: 2px solid #dc2626 !important;
+            border-bottom: 2px solid #dc2626 !important;
             cursor: grab !important;
         }
         
@@ -226,47 +232,47 @@
         }
         
         .occupied.reservation-start {
-            border-left: 3px solid #dc2626 !important;
-            border-top-left-radius: 8px;
-            border-bottom-left-radius: 8px;
+            border-left: 2px solid #dc2626 !important;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
         }
         
         .occupied.reservation-end {
-            border-right: 3px solid #dc2626 !important;
-            border-top-right-radius: 8px;
-            border-bottom-right-radius: 8px;
+            border-right: 2px solid #dc2626 !important;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
             cursor: ew-resize !important;
         }
         
         .occupied.reservation-single {
-            border: 3px solid #dc2626 !important;
-            border-radius: 8px;
+            border: 2px solid #dc2626 !important;
+            border-radius: 6px;
             cursor: ew-resize !important;
         }
         
         /* Stili per le prenotazioni NON SPOSTABILI (viola) */
         .occupied.locked {
             background: #e9d5ff !important;
-            border-top: 3px solid #9333ea !important;
-            border-bottom: 3px solid #9333ea !important;
+            border-top: 2px solid #9333ea !important;
+            border-bottom: 2px solid #9333ea !important;
             cursor: not-allowed !important;
         }
         
-        .occupied.locked .guest-name-cell {
+        .occupied.locked .guest-name-extended {
             color: #581c87;
         }
         
         .occupied.locked.reservation-start {
-            border-left: 3px solid #9333ea !important;
+            border-left: 2px solid #9333ea !important;
         }
         
         .occupied.locked.reservation-end {
-            border-right: 3px solid #9333ea !important;
+            border-right: 2px solid #9333ea !important;
             cursor: ew-resize !important;
         }
         
         .occupied.locked.reservation-single {
-            border: 3px solid #9333ea !important;
+            border: 2px solid #9333ea !important;
             cursor: ew-resize !important;
         }
         
@@ -275,9 +281,9 @@
             background: repeating-linear-gradient(
                 45deg,
                 #fca5a5,
-                #fca5a5 10px,
-                #ef4444 10px,
-                #ef4444 20px
+                #fca5a5 8px,
+                #ef4444 8px,
+                #ef4444 16px
             ) !important;
             animation: blink 1s infinite;
         }
@@ -298,13 +304,13 @@
         
         .drag-over {
             background: #fef3c7 !important;
-            border: 3px dashed #f59e0b !important;
+            border: 2px dashed #f59e0b !important;
         }
         
         /* Stile per resize */
         .resizing {
             opacity: 0.7;
-            border-right: 3px dashed #f59e0b !important;
+            border-right: 2px dashed #f59e0b !important;
         }
         
         .resize-preview {
@@ -510,6 +516,34 @@
             min-height: 80px;
         }
         
+        /* Multi-select per bus */
+        .parking-spots-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+        }
+        
+        .spot-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 13px;
+        }
+        
+        .spot-checkbox input {
+            width: auto;
+        }
+        
+        .spot-checkbox.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+        
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -561,6 +595,47 @@
             display: block;
             margin-bottom: 5px;
         }
+        
+        /* Risultati ricerca globale */
+        .search-results {
+            display: none;
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 30px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .search-results.active {
+            display: block;
+        }
+        
+        .search-result-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f3f4f6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background: #e5e7eb;
+        }
+        
+        .search-result-name {
+            font-weight: 700;
+            color: #1e3a8a;
+            font-size: 14px;
+        }
+        
+        .search-result-details {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 3px;
+        }
     </style>
 </head>
 <body>
@@ -602,22 +677,24 @@
             </div>
             
             <div class="control-group">
-                <label>Cerca</label>
-                <input type="text" id="searchGuest" placeholder="Ospite..." oninput="searchGuest()">
+                <label>Cerca (tutti i mesi)</label>
+                <input type="text" id="searchGuest" placeholder="Cerca ospite o targa..." oninput="searchGuestGlobal()">
             </div>
             
             <button class="btn btn-primary" onclick="showAddModal()" style="margin-top: 20px;">➕ Nuova</button>
         </div>
         
+        <div class="search-results" id="searchResults"></div>
+        
         <div class="info-banner">
             <strong>💡 Come funziona:</strong>
-            TRASCINA cella rossa per spostare • TRASCINA cella finale per ridimensionare • TASTO DESTRO per menu • VIOLA = Non spostabile
+            TRASCINA cella rossa per spostare • TRASCINA cella finale per ridimensionare • TASTO DESTRO per menu • 🚌 per bus multipli
         </div>
         
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 3px solid #dc2626; border-radius: 4px;"></div><span>Occupato</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #e9d5ff; border: 3px solid #9333ea; border-radius: 4px;"></div><span>Non spostabile</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626; border-radius: 4px;"></div><span>Occupato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #e9d5ff; border: 2px solid #9333ea; border-radius: 4px;"></div><span>Non spostabile</span></div>
             <div class="legend-item"><div class="legend-color" style="background: repeating-linear-gradient(45deg, #fca5a5, #fca5a5 5px, #ef4444 5px, #ef4444 10px); border-radius: 4px;"></div><span>Overbooking</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>PK 16-17 ⚡</span></div>
         </div>
@@ -660,17 +737,29 @@
                     <label>Ospite *</label>
                     <input type="text" id="guestName" required placeholder="ROSSI MARIO">
                 </div>
-                <div class="form-group">
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="isBus" onchange="toggleBusMode()">
+                    <label for="isBus">🚌 Bus/Pullman (seleziona più posti)</label>
+                </div>
+                
+                <div class="form-group" id="singleSpotGroup">
                     <label>Posto *</label>
                     <select id="parkingSpot" required><option value="">Seleziona...</option></select>
                 </div>
+                
+                <div class="form-group" id="multiSpotGroup" style="display:none;">
+                    <label>Posti (seleziona multipli per bus) *</label>
+                    <div class="parking-spots-grid" id="parkingSpotsGrid"></div>
+                </div>
+                
                 <div class="form-group">
                     <label>Arrivo *</label>
-                    <input type="date" id="checkInDate" required>
+                    <input type="date" id="checkInDate" required onchange="updateAvailableSpots()">
                 </div>
                 <div class="form-group">
                     <label>Partenza *</label>
-                    <input type="date" id="checkOutDate" required>
+                    <input type="date" id="checkOutDate" required onchange="updateAvailableSpots()">
                 </div>
                 <div class="form-group">
                     <label>Targa</label>
@@ -745,6 +834,7 @@
         
         function init(){
             populateParkingSpots();
+            populateParkingSpotsGrid();
             document.getElementById('monthSelect').value=currentMonth;
             document.getElementById('yearSelect').value=currentYear;
             setupTooltipEvents();
@@ -755,11 +845,82 @@
         
         function populateParkingSpots(){
             const select=document.getElementById('parkingSpot');
+            select.innerHTML='<option value="">Seleziona...</option>';
             parkingSpots.forEach(spot=>{
                 const option=document.createElement('option');
                 option.value=spot;
                 option.textContent=spot+getSpotIcon(spot);
                 select.appendChild(option);
+            });
+        }
+        
+        function populateParkingSpotsGrid(){
+            const grid=document.getElementById('parkingSpotsGrid');
+            grid.innerHTML='';
+            parkingSpots.forEach(spot=>{
+                const label=document.createElement('label');
+                label.className='spot-checkbox';
+                label.innerHTML=`<input type="checkbox" value="${spot}" class="spot-check"> ${spot}${getSpotIcon(spot)}`;
+                grid.appendChild(label);
+            });
+        }
+        
+        function toggleBusMode(){
+            const isBus=document.getElementById('isBus').checked;
+            document.getElementById('singleSpotGroup').style.display=isBus?'none':'block';
+            document.getElementById('multiSpotGroup').style.display=isBus?'block':'none';
+            
+            if(isBus){
+                document.getElementById('parkingSpot').removeAttribute('required');
+            }else{
+                document.getElementById('parkingSpot').setAttribute('required','');
+            }
+        }
+        
+        function updateAvailableSpots(){
+            const checkIn=document.getElementById('checkInDate').value;
+            const checkOut=document.getElementById('checkOutDate').value;
+            
+            if(!checkIn||!checkOut)return;
+            
+            // Trova posti occupati nel periodo
+            const occupiedSpots=new Set();
+            reservations.forEach(res=>{
+                if(!(checkOut<=res.check_in_date||checkIn>=res.check_out_date)){
+                    // Il periodo si sovrappone
+                    const spots=res.spot.split(',').map(s=>s.trim());
+                    spots.forEach(s=>occupiedSpots.add(s));
+                }
+            });
+            
+            // Aggiorna select singolo
+            const select=document.getElementById('parkingSpot');
+            const currentValue=select.value;
+            select.innerHTML='<option value="">Seleziona...</option>';
+            parkingSpots.forEach(spot=>{
+                const option=document.createElement('option');
+                option.value=spot;
+                option.textContent=spot+getSpotIcon(spot)+(occupiedSpots.has(spot)?' (occupato)':'');
+                option.disabled=occupiedSpots.has(spot);
+                select.appendChild(option);
+            });
+            if(!occupiedSpots.has(currentValue)){
+                select.value=currentValue;
+            }
+            
+            // Aggiorna grid multiplo
+            const checkboxes=document.querySelectorAll('.spot-checkbox');
+            checkboxes.forEach(label=>{
+                const checkbox=label.querySelector('input');
+                const spot=checkbox.value;
+                if(occupiedSpots.has(spot)){
+                    label.classList.add('disabled');
+                    checkbox.disabled=true;
+                    checkbox.checked=false;
+                }else{
+                    label.classList.remove('disabled');
+                    checkbox.disabled=false;
+                }
             });
         }
         
@@ -779,7 +940,10 @@
         }
         
         function getReservationsForDate(spot,dateStr){
-            return reservations.filter(res=>res.spot===spot&&dateStr>=res.check_in_date&&dateStr<res.check_out_date);
+            return reservations.filter(res=>{
+                const spots=res.spot.split(',').map(s=>s.trim());
+                return spots.includes(spot)&&dateStr>=res.check_in_date&&dateStr<res.check_out_date;
+            });
         }
         
         function formatDate(dateStr){
@@ -795,6 +959,61 @@
         function parseDateDDMMYYYY(dateStr){
             const[day,month,year]=dateStr.split('-');
             return `${year}-${month}-${day}`;
+        }
+        
+        function getMonthName(month){
+            const months=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+            return months[month];
+        }
+        
+        // RICERCA GLOBALE
+        function searchGuestGlobal(){
+            const search=document.getElementById('searchGuest').value.toLowerCase().trim();
+            const resultsDiv=document.getElementById('searchResults');
+            
+            if(!search||search.length<2){
+                resultsDiv.classList.remove('active');
+                return;
+            }
+            
+            const matches=reservations.filter(res=>
+                res.guest_name.toLowerCase().includes(search)||
+                (res.license_plate&&res.license_plate.toLowerCase().includes(search))
+            );
+            
+            if(matches.length===0){
+                resultsDiv.innerHTML='<div style="text-align:center;color:#6b7280;">Nessun risultato trovato</div>';
+                resultsDiv.classList.add('active');
+                return;
+            }
+            
+            let html='<div style="font-weight:700;margin-bottom:10px;color:#1e3a8a;">'+matches.length+' risultati trovati:</div>';
+            matches.forEach(res=>{
+                const checkInDate=new Date(res.check_in_date+'T00:00:00');
+                const monthName=getMonthName(checkInDate.getMonth());
+                const year=checkInDate.getFullYear();
+                
+                html+=`<div class="search-result-item" onclick="goToReservation('${res.check_in_date}')">
+                    <div class="search-result-name">${res.guest_name}</div>
+                    <div class="search-result-details">
+                        📍 ${res.spot} • 📅 ${formatDate(res.check_in_date)} → ${formatDate(res.check_out_date)} • 📆 ${monthName} ${year}
+                        ${res.license_plate?'• 🚗 '+res.license_plate:''}
+                    </div>
+                </div>`;
+            });
+            
+            resultsDiv.innerHTML=html;
+            resultsDiv.classList.add('active');
+        }
+        
+        function goToReservation(dateStr){
+            const date=new Date(dateStr+'T00:00:00');
+            currentMonth=date.getMonth();
+            currentYear=date.getFullYear();
+            document.getElementById('monthSelect').value=currentMonth;
+            document.getElementById('yearSelect').value=currentYear;
+            renderCalendar();
+            document.getElementById('searchResults').classList.remove('active');
         }
         
         // Menu contestuale
@@ -814,7 +1033,6 @@
                     if(contextMenuReservation){
                         const menu=document.getElementById('contextMenu');
                         
-                        // Mostra "Riunisci" solo se la prenotazione è divisa
                         const mergeItem=document.getElementById('menuMerge');
                         if(contextMenuReservation.notes && contextMenuReservation.notes.includes('🔗 Collegata')){
                             mergeItem.style.display='flex';
@@ -873,7 +1091,6 @@
             
             const res=contextMenuReservation;
             
-            // Cerca la prenotazione collegata
             const linkedReservations=reservations.filter(r=>
                 r.id!==res.id && 
                 r.guest_name===res.guest_name && 
@@ -888,7 +1105,6 @@
             
             const linked=linkedReservations[0];
             
-            // Determina quale viene prima
             const firstRes=(res.check_in_date<linked.check_in_date)?res:linked;
             const secondRes=(res.check_in_date<linked.check_in_date)?linked:res;
             
@@ -896,7 +1112,6 @@
                 return;
             }
             
-            // Crea prenotazione unificata
             const merged={
                 spot:firstRes.spot,
                 guest_name:firstRes.guest_name,
@@ -907,11 +1122,9 @@
                 non_spostare:firstRes.non_spostare||false
             };
             
-            // Elimina le due prenotazioni
             await sb.from('reservations').delete().eq('id',firstRes.id);
             await sb.from('reservations').delete().eq('id',secondRes.id);
             
-            // Inserisci la nuova
             const{error}=await sb.from('reservations').insert([merged]);
             if(error){
                 alert('❌ Errore nella riunione');
@@ -927,22 +1140,24 @@
             if(!contextMenuReservation)return;
             
             const res=contextMenuReservation;
+            const spots=res.spot.split(',').map(s=>s.trim());
             
-            // Chiedi data di split - FORMATO GG-MM-AAAA
+            if(spots.length>1){
+                alert('⚠️ Non puoi dividere una prenotazione bus con più posti. Elimina e ricrea se necessario.');
+                return;
+            }
+            
             const splitDateInput=prompt('📅 Dividi alla data (formato GG-MM-AAAA):\n\nEsempio: 10-01-2026\n\nLa prenotazione sarà divisa in:\n- Prima parte: dal '+formatDateDDMMYYYY(res.check_in_date)+' fino alla data scelta\n- Seconda parte: dalla data scelta al '+formatDateDDMMYYYY(res.check_out_date));
             
             if(!splitDateInput)return;
             
-            // Converti da GG-MM-AAAA a AAAA-MM-GG
             const splitDate=parseDateDDMMYYYY(splitDateInput);
             
-            // Validazione data
             if(splitDate<=res.check_in_date||splitDate>=res.check_out_date){
                 alert('❌ La data deve essere tra '+formatDateDDMMYYYY(res.check_in_date)+' e '+formatDateDDMMYYYY(res.check_out_date));
                 return;
             }
             
-            // Chiedi nuovo posto
             const newSpot=prompt('🅿️ Nuovo posto per la seconda parte (dal '+formatDateDDMMYYYY(splitDate)+' al '+formatDateDDMMYYYY(res.check_out_date)+'):\n\nEsempio: PK 7\n\nPosti disponibili:\n'+parkingSpots.join(', '));
             
             if(!newSpot||!parkingSpots.includes(newSpot)){
@@ -950,7 +1165,6 @@
                 return;
             }
             
-            // Crea le due prenotazioni
             const firstPart={
                 spot:res.spot,
                 guest_name:res.guest_name,
@@ -971,10 +1185,8 @@
                 non_spostare:res.non_spostare||false
             };
             
-            // Elimina originale
             await sb.from('reservations').delete().eq('id',res.id);
             
-            // Inserisci le due nuove
             const{error}=await sb.from('reservations').insert([firstPart,secondPart]);
             if(error){
                 alert('❌ Errore nella creazione delle prenotazioni divise');
@@ -999,6 +1211,7 @@
             const tooltip=document.getElementById('globalTooltip');
             
             let html='<div class="tooltip-header">'+res.guest_name+'</div>';
+            html+='<div class="tooltip-row"><span class="tooltip-label">Posto:</span><span class="tooltip-value">'+res.spot+'</span></div>';
             html+='<div class="tooltip-row"><span class="tooltip-label">Check-in:</span><span class="tooltip-value">'+formatDate(res.check_in_date)+'</span></div>';
             html+='<div class="tooltip-row"><span class="tooltip-label">Check-out:</span><span class="tooltip-value">'+formatDate(res.check_out_date)+'</span></div>';
             if(res.license_plate){
@@ -1105,7 +1318,7 @@
             for(let day=1;day<=daysInMonth;day++){
                 const date=new Date(currentYear,currentMonth,day);
                 const dayInitials=getDayInitials(date);
-                headerHTML+='<th>'+day+'<br><small style="font-size:9px;">'+dayInitials+'</small></th>';
+                headerHTML+='<th>'+day+'<br><small style="font-size:8px;">'+dayInitials+'</small></th>';
             }
             headerHTML+='</tr>';
             tableHead.innerHTML=headerHTML;
@@ -1135,6 +1348,10 @@
                         const res=resList[0];
                         cellReservationMap.set(cellKey,res);
                         
+                        const allSpots=res.spot.split(',').map(s=>s.trim());
+                        const firstSpot=allSpots[0];
+                        const isFirstSpot=(spot===firstSpot);
+                        
                         const isStart=(res.check_in_date===dateStr);
                         const checkOutDate=new Date(res.check_out_date+'T00:00:00');
                         const dayBeforeCheckout=new Date(checkOutDate);
@@ -1152,12 +1369,11 @@
                             borderClass='reservation-end';
                         }
                         
-                        // Nome ospite SOLO sulla prima cella
-                        if(isStart){
-                            cellContent='<div class="guest-name-cell">'+res.guest_name+'</div>';
+                        // Nome esteso SOLO sul primo posto
+                        if(isFirstSpot&&isStart){
+                            cellContent='<div class="guest-name-extended">'+res.guest_name+'</div>';
                         }
                         
-                        // Determina lo stile
                         if(resList.length>1){
                             cellClass='occupied overbooking '+borderClass;
                         }else if(res.non_spostare){
@@ -1166,17 +1382,13 @@
                             cellClass='occupied '+borderClass;
                         }
                         
-                        // Attributi - Gestisce resize vs drag
                         const isEndCell=(isEnd||isStart&&isEnd);
                         
                         if(isEndCell){
-                            // Cella finale - RESIZE
                             cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" data-is-end="true" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" onmousedown="handleResizeStart(event,\''+cellKey+'\')" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
                         }else if(res.non_spostare){
-                            // Locked - NO DRAG
                             cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
                         }else{
-                            // Normale - DRAG
                             cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
                         }
                     }else{
@@ -1196,6 +1408,11 @@
             const res=cellReservationMap.get(cellKey);
             if(!res)return;
             
+            const spots=res.spot.split(',').map(s=>s.trim());
+            if(spots.length>1){
+                return; // Non permettere resize su prenotazioni bus
+            }
+            
             resizingReservation=res;
             resizeStartDate=event.currentTarget.getAttribute('data-date');
             
@@ -1210,14 +1427,13 @@
             if(!resizingReservation)return;
             
             const target=document.elementFromPoint(event.clientX,event.clientY);
-            if(target&&target.tagName==='TD'&&target.getAttribute('data-spot')===resizingReservation.spot){
-                // Rimuovi preview precedenti
+            const spots=resizingReservation.spot.split(',').map(s=>s.trim());
+            if(target&&target.tagName==='TD'&&spots.includes(target.getAttribute('data-spot'))){
                 document.querySelectorAll('.resize-preview').forEach(el=>el.classList.remove('resize-preview'));
                 
                 const newDate=target.getAttribute('data-date');
                 if(newDate&&newDate>=resizingReservation.check_in_date){
-                    // Aggiungi preview
-                    const allCells=document.querySelectorAll(`td[data-spot="${resizingReservation.spot}"]`);
+                    const allCells=document.querySelectorAll(`td[data-spot="${spots[0]}"]`);
                     allCells.forEach(cell=>{
                         const cellDate=cell.getAttribute('data-date');
                         if(cellDate&&cellDate>=resizingReservation.check_in_date&&cellDate<=newDate){
@@ -1238,12 +1454,12 @@
             if(!resizingReservation)return;
             
             const target=document.elementFromPoint(event.clientX,event.clientY);
+            const spots=resizingReservation.spot.split(',').map(s=>s.trim());
             if(target&&target.tagName==='TD'){
                 const newEndDate=target.getAttribute('data-date');
                 const spot=target.getAttribute('data-spot');
                 
-                if(newEndDate&&spot===resizingReservation.spot&&newEndDate>=resizingReservation.check_in_date){
-                    // Calcola il nuovo check_out (giorno dopo l'ultima cella)
+                if(newEndDate&&spots.includes(spot)&&newEndDate>=resizingReservation.check_in_date){
                     const lastDay=new Date(newEndDate+'T00:00:00');
                     lastDay.setDate(lastDay.getDate()+1);
                     const newCheckOut=lastDay.toISOString().split('T')[0];
@@ -1278,6 +1494,12 @@
             if(!res)return;
             if(res.non_spostare){
                 event.preventDefault();
+                return;
+            }
+            const spots=res.spot.split(',').map(s=>s.trim());
+            if(spots.length>1){
+                event.preventDefault();
+                alert('⚠️ Non puoi trascinare prenotazioni bus con più posti');
                 return;
             }
             draggedReservation=res;
@@ -1336,8 +1558,11 @@
             document.getElementById('checkOutDate').value='';
             document.getElementById('licensePlate').value='';
             document.getElementById('notes').value='';
+            document.getElementById('isBus').checked=false;
             document.getElementById('nonSpostare').checked=false;
             document.getElementById('deleteBtn').style.display='none';
+            toggleBusMode();
+            document.querySelectorAll('.spot-check').forEach(cb=>cb.checked=false);
             document.getElementById('reservationModal').classList.add('active');
         }
         
@@ -1345,13 +1570,27 @@
             document.getElementById('modalTitle').textContent='Modifica Prenotazione';
             document.getElementById('reservationId').value=res.id;
             document.getElementById('guestName').value=res.guest_name;
-            document.getElementById('parkingSpot').value=res.spot;
+            
+            const spots=res.spot.split(',').map(s=>s.trim());
+            if(spots.length>1){
+                document.getElementById('isBus').checked=true;
+                toggleBusMode();
+                document.querySelectorAll('.spot-check').forEach(cb=>{
+                    cb.checked=spots.includes(cb.value);
+                });
+            }else{
+                document.getElementById('isBus').checked=false;
+                toggleBusMode();
+                document.getElementById('parkingSpot').value=res.spot;
+            }
+            
             document.getElementById('checkInDate').value=res.check_in_date;
             document.getElementById('checkOutDate').value=res.check_out_date;
             document.getElementById('licensePlate').value=res.license_plate||'';
             document.getElementById('notes').value=res.notes||'';
             document.getElementById('nonSpostare').checked=res.non_spostare||false;
             document.getElementById('deleteBtn').style.display='block';
+            updateAvailableSpots();
             document.getElementById('reservationModal').classList.add('active');
         }
         
@@ -1363,6 +1602,8 @@
                 document.getElementById('modalTitle').textContent='Nuova Prenotazione';
                 document.getElementById('reservationId').value='';
                 document.getElementById('guestName').value='';
+                document.getElementById('isBus').checked=false;
+                toggleBusMode();
                 document.getElementById('parkingSpot').value=spot;
                 document.getElementById('checkInDate').value=dateStr;
                 document.getElementById('checkOutDate').value='';
@@ -1381,8 +1622,26 @@
         async function saveReservation(event){
             event.preventDefault();
             const id=document.getElementById('reservationId').value;
+            
+            let spot;
+            const isBus=document.getElementById('isBus').checked;
+            if(isBus){
+                const selectedSpots=Array.from(document.querySelectorAll('.spot-check:checked')).map(cb=>cb.value);
+                if(selectedSpots.length===0){
+                    alert('⚠️ Seleziona almeno un posto per il bus');
+                    return;
+                }
+                spot=selectedSpots.join(', ');
+            }else{
+                spot=document.getElementById('parkingSpot').value;
+                if(!spot){
+                    alert('⚠️ Seleziona un posto');
+                    return;
+                }
+            }
+            
             const data={
-                spot:document.getElementById('parkingSpot').value,
+                spot:spot,
                 guest_name:document.getElementById('guestName').value,
                 check_in_date:document.getElementById('checkInDate').value,
                 check_out_date:document.getElementById('checkOutDate').value,
@@ -1420,29 +1679,6 @@
             closeModal();
             alert('🗑️ Prenotazione eliminata!');
             loadReservations();
-        }
-        
-        function searchGuest(){
-            const search=document.getElementById('searchGuest').value.toLowerCase();
-            if(!search){
-                document.querySelectorAll('#tableBody tr').forEach(row=>row.style.display='');
-                return;
-            }
-            
-            const matchingReservations=reservations.filter(res=>
-                res.guest_name.toLowerCase().includes(search)||
-                (res.license_plate&&res.license_plate.toLowerCase().includes(search))
-            );
-            
-            const matchingSpots=new Set(matchingReservations.map(res=>res.spot));
-            
-            document.querySelectorAll('#tableBody tr').forEach(row=>{
-                const spotCell=row.querySelector('.posto-header');
-                if(spotCell){
-                    const spotName=spotCell.textContent.trim().replace('⚡','').trim();
-                    row.style.display=matchingSpots.has(spotName)||!search?'':'none';
-                }
-            });
         }
         
         window.onload=init;
