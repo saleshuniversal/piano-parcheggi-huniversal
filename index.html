@@ -215,35 +215,97 @@
             pointer-events: none;
             z-index: 1;
             padding: 0 2px;
-            color: #7f1d1d;
         }
         
-        .occupied {
+        /* STATO: RESERVED (giallo) */
+        .occupied.status-reserved {
+            background: #fef9c3;
+            border-top: 2px solid #eab308 !important;
+            border-bottom: 2px solid #eab308 !important;
+            cursor: grab !important;
+        }
+        
+        .occupied.status-reserved .guest-name-extended {
+            color: #854d0e;
+        }
+        
+        .occupied.status-reserved.reservation-start {
+            border-left: 2px solid #eab308 !important;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+        
+        .occupied.status-reserved.reservation-end {
+            border-right: 2px solid #eab308 !important;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .occupied.status-reserved.reservation-single {
+            border: 2px solid #eab308 !important;
+            border-radius: 6px;
+        }
+        
+        /* STATO: CHECKED_IN (rosso) */
+        .occupied.status-checked_in {
             background: #fee2e2;
             border-top: 2px solid #dc2626 !important;
             border-bottom: 2px solid #dc2626 !important;
             cursor: grab !important;
         }
         
-        .occupied:active {
-            cursor: grabbing !important;
+        .occupied.status-checked_in .guest-name-extended {
+            color: #7f1d1d;
         }
         
-        .occupied.reservation-start {
+        .occupied.status-checked_in.reservation-start {
             border-left: 2px solid #dc2626 !important;
             border-top-left-radius: 6px;
             border-bottom-left-radius: 6px;
         }
         
-        .occupied.reservation-end {
+        .occupied.status-checked_in.reservation-end {
             border-right: 2px solid #dc2626 !important;
             border-top-right-radius: 6px;
             border-bottom-right-radius: 6px;
         }
         
-        .occupied.reservation-single {
+        .occupied.status-checked_in.reservation-single {
             border: 2px solid #dc2626 !important;
             border-radius: 6px;
+        }
+        
+        /* STATO: CHECKED_OUT (grigio) */
+        .occupied.status-checked_out {
+            background: #e5e7eb;
+            border-top: 2px solid #6b7280 !important;
+            border-bottom: 2px solid #6b7280 !important;
+            cursor: grab !important;
+        }
+        
+        .occupied.status-checked_out .guest-name-extended {
+            color: #1f2937;
+        }
+        
+        .occupied.status-checked_out.reservation-start {
+            border-left: 2px solid #6b7280 !important;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+        
+        .occupied.status-checked_out.reservation-end {
+            border-right: 2px solid #6b7280 !important;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .occupied.status-checked_out.reservation-single {
+            border: 2px solid #6b7280 !important;
+            border-radius: 6px;
+        }
+        
+        .occupied:active {
+            cursor: grabbing !important;
         }
         
         .occupied.locked {
@@ -306,7 +368,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 10001;
-            min-width: 200px;
+            min-width: 220px;
             padding: 4px 0;
         }
         
@@ -664,15 +726,16 @@
         
         <div class="info-banner">
             <strong>💡 Come funziona:</strong>
-            TRASCINA per spostare • DOPPIO CLICK per modificare • TASTO DESTRO per menu • 🚌 per bus multipli
+            TRASCINA per spostare • DOPPIO CLICK per modificare • TASTO DESTRO per check-in/check-out
         </div>
         
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626; border-radius: 4px;"></div><span>Occupato</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #e9d5ff; border: 2px solid #9333ea; border-radius: 4px;"></div><span>Non spostabile</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: repeating-linear-gradient(45deg, #fca5a5, #fca5a5 5px, #ef4444 5px, #ef4444 10px); border-radius: 4px;"></div><span>Overbooking</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>PK 16-17 ⚡</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fef9c3; border: 2px solid #eab308;"></div><span>Prenotato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626;"></div><span>Arrivato (Check-in)</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #e5e7eb; border: 2px solid #6b7280;"></div><span>Partito (Check-out)</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #e9d5ff; border: 2px solid #9333ea;"></div><span>Non spostabile</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: repeating-linear-gradient(45deg, #fca5a5, #fca5a5 5px, #ef4444 5px, #ef4444 10px);"></div><span>Overbooking</span></div>
         </div>
         
         <div class="parking-grid">
@@ -685,6 +748,16 @@
     </div>
     
     <div id="contextMenu">
+        <div class="context-menu-item" id="menuCheckIn">
+            ✅ Check-in (Arrivato)
+        </div>
+        <div class="context-menu-item" id="menuCheckOut">
+            🏁 Check-out (Partito)
+        </div>
+        <div class="context-menu-item" id="menuReserved">
+            🔄 Ripristina Prenotato
+        </div>
+        <div class="context-menu-separator"></div>
         <div class="context-menu-item" id="menuMerge" style="display:none;">
             🔗 Riunisci prenotazione
         </div>
@@ -794,9 +867,19 @@
             return(num===16||num===17)?' ⚡':'';
         }
         
+        function getStatusLabel(status){
+            if(status==='checked_in')return'Arrivato (Check-in)';
+            if(status==='checked_out')return'Partito (Check-out)';
+            return'Prenotato';
+        }
+        
         async function loadReservations(){
             const{data,error}=await sb.from('reservations').select('*');
-            if(error){alert('Errore caricamento');return;}
+            if(error){
+                console.error('Errore caricamento:',error);
+                alert('Errore caricamento');
+                return;
+            }
             reservations=data||[];
             document.getElementById('loading').style.display='none';
             document.getElementById('parkingTable').style.display='table';
@@ -947,9 +1030,10 @@
                 const checkInDate=new Date(res.check_in_date+'T00:00:00');
                 const monthName=getMonthName(checkInDate.getMonth());
                 const year=checkInDate.getFullYear();
+                const statusLabel=getStatusLabel(res.status);
                 
                 html+=`<div class="search-result-item" data-date="${res.check_in_date}">
-                    <div class="search-result-name">${res.guest_name}</div>
+                    <div class="search-result-name">${res.guest_name} - ${statusLabel}</div>
                     <div class="search-result-details">
                         📍 ${res.spot} • 📅 ${formatDate(res.check_in_date)} → ${formatDate(res.check_out_date)} • 📆 ${monthName} ${year}
                         ${res.license_plate?'• 🚗 '+res.license_plate:''}
@@ -969,6 +1053,27 @@
             document.getElementById('yearSelect').value=currentYear;
             renderCalendar();
             document.getElementById('searchResults').classList.remove('active');
+        }
+        
+        async function changeStatus(newStatus){
+            document.getElementById('contextMenu').style.display='none';
+            if(!contextMenuReservation)return;
+            
+            const{error}=await sb.from('reservations').update({status:newStatus}).eq('id',contextMenuReservation.id);
+            
+            if(error){
+                alert('❌ Errore nel cambio stato');
+                return;
+            }
+            
+            const statusMsg={
+                'reserved':'🔄 Stato ripristinato a Prenotato',
+                'checked_in':'✅ Check-in effettuato! Ospite arrivato',
+                'checked_out':'🏁 Check-out effettuato! Ospite partito'
+            };
+            
+            alert(statusMsg[newStatus]||'✅ Stato aggiornato');
+            loadReservations();
         }
         
         function setupContextMenu(){
@@ -996,8 +1101,8 @@
                         
                         menu.style.display='block';
                         
-                        const menuWidth=200;
-                        const menuHeight=160;
+                        const menuWidth=220;
+                        const menuHeight=280;
                         
                         let left=e.clientX+10;
                         let top=e.clientY+10;
@@ -1073,7 +1178,8 @@
                 check_out_date:secondRes.check_out_date,
                 license_plate:firstRes.license_plate||'',
                 notes:(firstRes.notes||'').replace(/🔗 Collegata[^\n]*/g,'').trim(),
-                non_spostare:firstRes.non_spostare||false
+                non_spostare:firstRes.non_spostare||false,
+                status:firstRes.status||'reserved'
             };
             
             await sb.from('reservations').delete().eq('id',firstRes.id);
@@ -1126,7 +1232,8 @@
                 check_out_date:splitDate,
                 license_plate:res.license_plate||'',
                 notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+newSpot+' dal '+formatDateDDMMYYYY(splitDate),
-                non_spostare:res.non_spostare||false
+                non_spostare:res.non_spostare||false,
+                status:res.status||'reserved'
             };
             
             const secondPart={
@@ -1136,7 +1243,8 @@
                 check_out_date:res.check_out_date,
                 license_plate:res.license_plate||'',
                 notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+res.spot+' fino al '+formatDateDDMMYYYY(splitDate),
-                non_spostare:res.non_spostare||false
+                non_spostare:res.non_spostare||false,
+                status:'reserved'
             };
             
             await sb.from('reservations').delete().eq('id',res.id);
@@ -1163,6 +1271,7 @@
             const tooltip=document.getElementById('globalTooltip');
             
             let html='<div class="tooltip-header">'+res.guest_name+'</div>';
+            html+='<div class="tooltip-row"><span class="tooltip-label">Stato:</span><span class="tooltip-value">'+getStatusLabel(res.status)+'</span></div>';
             html+='<div class="tooltip-row"><span class="tooltip-label">Posto:</span><span class="tooltip-value">'+res.spot+'</span></div>';
             html+='<div class="tooltip-row"><span class="tooltip-label">Check-in:</span><span class="tooltip-value">'+formatDate(res.check_in_date)+'</span></div>';
             html+='<div class="tooltip-row"><span class="tooltip-label">Check-out:</span><span class="tooltip-value">'+formatDate(res.check_out_date)+'</span></div>';
@@ -1332,12 +1441,14 @@
                             cellContent='<div class="guest-name-extended">'+res.guest_name+'</div>';
                         }
                         
+                        const status=res.status||'reserved';
+                        
                         if(resList.length>1){
                             cellClass='occupied overbooking '+borderClass;
                         }else if(res.non_spostare){
                             cellClass='occupied locked '+borderClass;
                         }else{
-                            cellClass='occupied '+borderClass;
+                            cellClass='occupied status-'+status+' '+borderClass;
                         }
                         
                         if(res.non_spostare){
@@ -1543,7 +1654,8 @@
                 check_out_date:document.getElementById('checkOutDate').value,
                 license_plate:document.getElementById('licensePlate').value,
                 notes:document.getElementById('notes').value,
-                non_spostare:document.getElementById('nonSpostare').checked
+                non_spostare:document.getElementById('nonSpostare').checked,
+                status:'reserved'
             };
             if(data.check_in_date>=data.check_out_date){
                 alert('⚠️ La data di partenza deve essere successiva alla data di arrivo!');
@@ -1551,6 +1663,7 @@
             }
             let result;
             if(id){
+                delete data.status;
                 result=await sb.from('reservations').update(data).eq('id',id);
             }else{
                 result=await sb.from('reservations').insert([data]);
@@ -1598,6 +1711,9 @@
             document.getElementById('isBus').addEventListener('change',toggleBusMode);
             document.getElementById('checkInDate').addEventListener('change',updateAvailableSpots);
             document.getElementById('checkOutDate').addEventListener('change',updateAvailableSpots);
+            document.getElementById('menuCheckIn').addEventListener('click',()=>changeStatus('checked_in'));
+            document.getElementById('menuCheckOut').addEventListener('click',()=>changeStatus('checked_out'));
+            document.getElementById('menuReserved').addEventListener('click',()=>changeStatus('reserved'));
             document.getElementById('menuMerge').addEventListener('click',mergeReservationFromContext);
             document.getElementById('menuSplit').addEventListener('click',splitReservationFromContext);
             document.getElementById('menuEdit').addEventListener('click',editFromContext);
