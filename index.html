@@ -202,7 +202,6 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
         
-        /* Nome ospite esteso su tutta la prenotazione */
         .guest-name-extended {
             position: absolute;
             left: 0;
@@ -211,7 +210,6 @@
             transform: translateY(-50%);
             font-size: 7px;
             font-weight: 700;
-            color: #7f1d1d;
             white-space: nowrap;
             text-align: center;
             pointer-events: none;
@@ -219,38 +217,100 @@
             padding: 0 2px;
         }
         
-        /* Stili per le prenotazioni NORMALI (rosse) */
-        .occupied {
+        /* STATI: reserved (giallo), checked_in (rosso), checked_out (grigio) */
+        
+        /* Stato: RESERVED (giallo chiaro) */
+        .occupied.status-reserved {
+            background: #fef9c3;
+            border-top: 2px solid #eab308 !important;
+            border-bottom: 2px solid #eab308 !important;
+            cursor: grab !important;
+        }
+        
+        .occupied.status-reserved .guest-name-extended {
+            color: #854d0e;
+        }
+        
+        .occupied.status-reserved.reservation-start {
+            border-left: 2px solid #eab308 !important;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+        
+        .occupied.status-reserved.reservation-end {
+            border-right: 2px solid #eab308 !important;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .occupied.status-reserved.reservation-single {
+            border: 2px solid #eab308 !important;
+            border-radius: 6px;
+        }
+        
+        /* Stato: CHECKED_IN (rosso) */
+        .occupied.status-checked_in {
             background: #fee2e2;
             border-top: 2px solid #dc2626 !important;
             border-bottom: 2px solid #dc2626 !important;
             cursor: grab !important;
         }
         
-        .occupied:active {
-            cursor: grabbing !important;
+        .occupied.status-checked_in .guest-name-extended {
+            color: #7f1d1d;
         }
         
-        .occupied.reservation-start {
+        .occupied.status-checked_in.reservation-start {
             border-left: 2px solid #dc2626 !important;
             border-top-left-radius: 6px;
             border-bottom-left-radius: 6px;
         }
         
-        .occupied.reservation-end {
+        .occupied.status-checked_in.reservation-end {
             border-right: 2px solid #dc2626 !important;
             border-top-right-radius: 6px;
             border-bottom-right-radius: 6px;
-            cursor: ew-resize !important;
         }
         
-        .occupied.reservation-single {
+        .occupied.status-checked_in.reservation-single {
             border: 2px solid #dc2626 !important;
             border-radius: 6px;
-            cursor: ew-resize !important;
         }
         
-        /* Stili per le prenotazioni NON SPOSTABILI (viola) */
+        /* Stato: CHECKED_OUT (grigio) */
+        .occupied.status-checked_out {
+            background: #e5e7eb;
+            border-top: 2px solid #6b7280 !important;
+            border-bottom: 2px solid #6b7280 !important;
+            cursor: grab !important;
+        }
+        
+        .occupied.status-checked_out .guest-name-extended {
+            color: #1f2937;
+        }
+        
+        .occupied.status-checked_out.reservation-start {
+            border-left: 2px solid #6b7280 !important;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+        
+        .occupied.status-checked_out.reservation-end {
+            border-right: 2px solid #6b7280 !important;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .occupied.status-checked_out.reservation-single {
+            border: 2px solid #6b7280 !important;
+            border-radius: 6px;
+        }
+        
+        .occupied:active {
+            cursor: grabbing !important;
+        }
+        
+        /* Locked (viola) - mantiene il colore ma può cambiare stato */
         .occupied.locked {
             background: #e9d5ff !important;
             border-top: 2px solid #9333ea !important;
@@ -268,15 +328,13 @@
         
         .occupied.locked.reservation-end {
             border-right: 2px solid #9333ea !important;
-            cursor: ew-resize !important;
         }
         
         .occupied.locked.reservation-single {
             border: 2px solid #9333ea !important;
-            cursor: ew-resize !important;
         }
         
-        /* Stile per overbooking */
+        /* Overbooking */
         .overbooking {
             background: repeating-linear-gradient(
                 45deg,
@@ -297,7 +355,6 @@
             background: #d1fae5;
         }
         
-        /* Stile per drag & drop */
         .dragging {
             opacity: 0.5;
         }
@@ -305,17 +362,6 @@
         .drag-over {
             background: #fef3c7 !important;
             border: 2px dashed #f59e0b !important;
-        }
-        
-        /* Stile per resize */
-        .resizing {
-            opacity: 0.7;
-            border-right: 2px dashed #f59e0b !important;
-        }
-        
-        .resize-preview {
-            background: #fef3c7 !important;
-            opacity: 0.5;
         }
         
         /* Menu contestuale */
@@ -327,7 +373,7 @@
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             z-index: 10001;
-            min-width: 200px;
+            min-width: 220px;
             padding: 4px 0;
         }
         
@@ -356,7 +402,7 @@
             margin: 4px 0;
         }
         
-        /* Tooltip migliorato */
+        /* Tooltip */
         #globalTooltip {
             visibility: hidden;
             position: fixed;
@@ -516,7 +562,6 @@
             min-height: 80px;
         }
         
-        /* Multi-select per bus */
         .parking-spots-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
@@ -596,7 +641,6 @@
             margin-bottom: 5px;
         }
         
-        /* Risultati ricerca globale */
         .search-results {
             display: none;
             background: white;
@@ -688,15 +732,16 @@
         
         <div class="info-banner">
             <strong>💡 Come funziona:</strong>
-            TRASCINA cella rossa per spostare • TRASCINA cella finale per ridimensionare • TASTO DESTRO per menu • 🚌 per bus multipli
+            TRASCINA per spostare • DOPPIO CLICK per modificare • TASTO DESTRO per menu/check-in/check-out
         </div>
         
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626; border-radius: 4px;"></div><span>Occupato</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #e9d5ff; border: 2px solid #9333ea; border-radius: 4px;"></div><span>Non spostabile</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: repeating-linear-gradient(45deg, #fca5a5, #fca5a5 5px, #ef4444 5px, #ef4444 10px); border-radius: 4px;"></div><span>Overbooking</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div><span>PK 16-17 ⚡</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fef9c3; border: 2px solid #eab308;"></div><span>Prenotato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626;"></div><span>Arrivato (Check-in)</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #e5e7eb; border: 2px solid #6b7280;"></div><span>Partito (Check-out)</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #e9d5ff; border: 2px solid #9333ea;"></div><span>Non spostabile</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: repeating-linear-gradient(45deg, #fca5a5, #fca5a5 5px, #ef4444 5px, #ef4444 10px);"></div><span>Overbooking</span></div>
         </div>
         
         <div class="parking-grid">
@@ -710,6 +755,16 @@
     
     <!-- Menu contestuale -->
     <div id="contextMenu">
+        <div class="context-menu-item" id="menuCheckIn" onclick="changeStatus('checked_in')">
+            ✅ Check-in (Arrivato)
+        </div>
+        <div class="context-menu-item" id="menuCheckOut" onclick="changeStatus('checked_out')">
+            🏁 Check-out (Partito)
+        </div>
+        <div class="context-menu-item" id="menuReserved" onclick="changeStatus('reserved')">
+            🔄 Ripristina Prenotato
+        </div>
+        <div class="context-menu-separator"></div>
         <div class="context-menu-item" id="menuMerge" style="display:none;" onclick="mergeReservationFromContext()">
             🔗 Riunisci prenotazione
         </div>
@@ -784,7 +839,6 @@
         </div>
     </div>
     
-    <!-- Tooltip globale -->
     <div id="globalTooltip"></div>
     
     <script>
@@ -803,8 +857,6 @@
         let currentHoveredCell = null;
         let tooltipHideTimer = null;
         let contextMenuReservation = null;
-        let resizingReservation = null;
-        let resizeStartDate = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -821,6 +873,12 @@
         function getSpotIcon(spot){
             const num=parseInt(spot.replace('PK ',''));
             return(num===16||num===17)?' ⚡':'';
+        }
+        
+        function getStatusLabel(status){
+            if(status==='checked_in')return'Arrivato (Check-in)';
+            if(status==='checked_out')return'Partito (Check-out)';
+            return'Prenotato';
         }
         
         async function loadReservations(){
@@ -883,17 +941,14 @@
             
             if(!checkIn||!checkOut)return;
             
-            // Trova posti occupati nel periodo
             const occupiedSpots=new Set();
             reservations.forEach(res=>{
                 if(!(checkOut<=res.check_in_date||checkIn>=res.check_out_date)){
-                    // Il periodo si sovrappone
                     const spots=res.spot.split(',').map(s=>s.trim());
                     spots.forEach(s=>occupiedSpots.add(s));
                 }
             });
             
-            // Aggiorna select singolo
             const select=document.getElementById('parkingSpot');
             const currentValue=select.value;
             select.innerHTML='<option value="">Seleziona...</option>';
@@ -908,7 +963,6 @@
                 select.value=currentValue;
             }
             
-            // Aggiorna grid multiplo
             const checkboxes=document.querySelectorAll('.spot-checkbox');
             checkboxes.forEach(label=>{
                 const checkbox=label.querySelector('input');
@@ -966,7 +1020,6 @@
             return months[month];
         }
         
-        // RICERCA GLOBALE
         function searchGuestGlobal(){
             const search=document.getElementById('searchGuest').value.toLowerCase().trim();
             const resultsDiv=document.getElementById('searchResults');
@@ -992,9 +1045,10 @@
                 const checkInDate=new Date(res.check_in_date+'T00:00:00');
                 const monthName=getMonthName(checkInDate.getMonth());
                 const year=checkInDate.getFullYear();
+                const statusLabel=getStatusLabel(res.status);
                 
                 html+=`<div class="search-result-item" onclick="goToReservation('${res.check_in_date}')">
-                    <div class="search-result-name">${res.guest_name}</div>
+                    <div class="search-result-name">${res.guest_name} - ${statusLabel}</div>
                     <div class="search-result-details">
                         📍 ${res.spot} • 📅 ${formatDate(res.check_in_date)} → ${formatDate(res.check_out_date)} • 📆 ${monthName} ${year}
                         ${res.license_plate?'• 🚗 '+res.license_plate:''}
@@ -1016,7 +1070,27 @@
             document.getElementById('searchResults').classList.remove('active');
         }
         
-        // Menu contestuale
+        async function changeStatus(newStatus){
+            document.getElementById('contextMenu').style.display='none';
+            if(!contextMenuReservation)return;
+            
+            const{error}=await sb.from('reservations').update({status:newStatus}).eq('id',contextMenuReservation.id);
+            
+            if(error){
+                alert('❌ Errore nel cambio stato');
+                return;
+            }
+            
+            const statusMsg={
+                'reserved':'🔄 Stato ripristinato a Prenotato',
+                'checked_in':'✅ Check-in effettuato! Ospite arrivato',
+                'checked_out':'🏁 Check-out effettuato! Ospite partito'
+            };
+            
+            alert(statusMsg[newStatus]||'✅ Stato aggiornato');
+            loadReservations();
+        }
+        
         function setupContextMenu(){
             document.addEventListener('click',function(e){
                 if(!e.target.closest('#contextMenu')){
@@ -1042,8 +1116,8 @@
                         
                         menu.style.display='block';
                         
-                        const menuWidth=200;
-                        const menuHeight=160;
+                        const menuWidth=220;
+                        const menuHeight=280;
                         
                         let left=e.clientX+10;
                         let top=e.clientY+10;
@@ -1119,7 +1193,8 @@
                 check_out_date:secondRes.check_out_date,
                 license_plate:firstRes.license_plate||'',
                 notes:(firstRes.notes||'').replace(/🔗 Collegata[^\n]*/g,'').trim(),
-                non_spostare:firstRes.non_spostare||false
+                non_spostare:firstRes.non_spostare||false,
+                status:firstRes.status||'reserved'
             };
             
             await sb.from('reservations').delete().eq('id',firstRes.id);
@@ -1158,530 +1233,4 @@
                 return;
             }
             
-            const newSpot=prompt('🅿️ Nuovo posto per la seconda parte (dal '+formatDateDDMMYYYY(splitDate)+' al '+formatDateDDMMYYYY(res.check_out_date)+'):\n\nEsempio: PK 7\n\nPosti disponibili:\n'+parkingSpots.join(', '));
-            
-            if(!newSpot||!parkingSpots.includes(newSpot)){
-                alert('❌ Posto non valido');
-                return;
-            }
-            
-            const firstPart={
-                spot:res.spot,
-                guest_name:res.guest_name,
-                check_in_date:res.check_in_date,
-                check_out_date:splitDate,
-                license_plate:res.license_plate||'',
-                notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+newSpot+' dal '+formatDateDDMMYYYY(splitDate),
-                non_spostare:res.non_spostare||false
-            };
-            
-            const secondPart={
-                spot:newSpot,
-                guest_name:res.guest_name,
-                check_in_date:splitDate,
-                check_out_date:res.check_out_date,
-                license_plate:res.license_plate||'',
-                notes:(res.notes||'')+'\n🔗 Collegata con '+res.guest_name+' su '+res.spot+' fino al '+formatDateDDMMYYYY(splitDate),
-                non_spostare:res.non_spostare||false
-            };
-            
-            await sb.from('reservations').delete().eq('id',res.id);
-            
-            const{error}=await sb.from('reservations').insert([firstPart,secondPart]);
-            if(error){
-                alert('❌ Errore nella creazione delle prenotazioni divise');
-                return;
-            }
-            
-            alert('✅ Prenotazione divisa con successo!\n\n✂️ Prima parte: '+res.spot+' ('+formatDateDDMMYYYY(res.check_in_date)+' → '+formatDateDDMMYYYY(splitDate)+')\n✂️ Seconda parte: '+newSpot+' ('+formatDateDDMMYYYY(splitDate)+' → '+formatDateDDMMYYYY(res.check_out_date)+')');
-            loadReservations();
-        }
-        
-        function showTooltip(event,cellKey){
-            const res=cellReservationMap.get(cellKey);
-            if(!res)return;
-            
-            if(tooltipHideTimer){
-                clearTimeout(tooltipHideTimer);
-                tooltipHideTimer=null;
-            }
-            
-            currentHoveredCell=event.currentTarget;
-            
-            const tooltip=document.getElementById('globalTooltip');
-            
-            let html='<div class="tooltip-header">'+res.guest_name+'</div>';
-            html+='<div class="tooltip-row"><span class="tooltip-label">Posto:</span><span class="tooltip-value">'+res.spot+'</span></div>';
-            html+='<div class="tooltip-row"><span class="tooltip-label">Check-in:</span><span class="tooltip-value">'+formatDate(res.check_in_date)+'</span></div>';
-            html+='<div class="tooltip-row"><span class="tooltip-label">Check-out:</span><span class="tooltip-value">'+formatDate(res.check_out_date)+'</span></div>';
-            if(res.license_plate){
-                html+='<div class="tooltip-row"><span class="tooltip-label">Targa:</span><span class="tooltip-value">'+res.license_plate+'</span></div>';
-            }
-            if(res.notes){
-                html+='<div class="tooltip-row"><span class="tooltip-label">Note:</span><span class="tooltip-value">'+res.notes+'</span></div>';
-            }
-            if(res.non_spostare){
-                html+='<div class="tooltip-row"><span class="tooltip-label">Stato:</span><span class="tooltip-value">🔒 Non spostabile</span></div>';
-            }
-            html+='<div class="tooltip-actions">';
-            html+='<button class="tooltip-btn tooltip-btn-edit" onclick="editFromTooltip(\''+cellKey+'\')">✏️ Modifica</button>';
-            html+='<button class="tooltip-btn tooltip-btn-delete" onclick="deleteFromTooltip(\''+cellKey+'\')">🗑️ Elimina</button>';
-            html+='</div>';
-            
-            tooltip.innerHTML=html;
-            tooltip.style.visibility='visible';
-            positionTooltip(event.currentTarget);
-        }
-        
-        function scheduleHideTooltip(){
-            tooltipHideTimer=setTimeout(function(){
-                hideTooltip();
-            },300);
-        }
-        
-        function cancelHideTooltip(){
-            if(tooltipHideTimer){
-                clearTimeout(tooltipHideTimer);
-                tooltipHideTimer=null;
-            }
-        }
-        
-        function positionTooltip(cell){
-            const tooltip=document.getElementById('globalTooltip');
-            const rect=cell.getBoundingClientRect();
-            
-            const tooltipHeight=tooltip.offsetHeight;
-            let top=rect.top-tooltipHeight-10;
-            let left=rect.left+(rect.width/2)-(tooltip.offsetWidth/2);
-            
-            if(top<0){
-                top=rect.bottom+10;
-            }
-            
-            if(left<10){
-                left=10;
-            }
-            if(left+tooltip.offsetWidth>window.innerWidth-10){
-                left=window.innerWidth-tooltip.offsetWidth-10;
-            }
-            
-            tooltip.style.left=left+'px';
-            tooltip.style.top=top+'px';
-        }
-        
-        function hideTooltip(){
-            document.getElementById('globalTooltip').style.visibility='hidden';
-            currentHoveredCell=null;
-            if(tooltipHideTimer){
-                clearTimeout(tooltipHideTimer);
-                tooltipHideTimer=null;
-            }
-        }
-        
-        function setupTooltipEvents(){
-            const tooltip=document.getElementById('globalTooltip');
-            tooltip.addEventListener('mouseenter',function(){
-                cancelHideTooltip();
-            });
-            tooltip.addEventListener('mouseleave',function(){
-                hideTooltip();
-            });
-        }
-        
-        function editFromTooltip(cellKey){
-            hideTooltip();
-            const res=cellReservationMap.get(cellKey);
-            if(!res)return;
-            openModalWithReservation(res);
-        }
-        
-        async function deleteFromTooltip(cellKey){
-            hideTooltip();
-            const res=cellReservationMap.get(cellKey);
-            if(!res)return;
-            if(!confirm('⚠️ Sei sicuro di voler eliminare la prenotazione di '+res.guest_name+'?'))return;
-            const{error}=await sb.from('reservations').delete().eq('id',res.id);
-            if(error){
-                alert('❌ Errore nell\'eliminazione');
-                return;
-            }
-            alert('🗑️ Prenotazione eliminata!');
-            loadReservations();
-        }
-        
-        function renderCalendar(){
-            cellReservationMap.clear();
-            const daysInMonth=getDaysInMonth(currentMonth,currentYear);
-            const tableHead=document.getElementById('tableHead');
-            const tableBody=document.getElementById('tableBody');
-            let headerHTML='<tr><th class="posto-header">Posto</th>';
-            for(let day=1;day<=daysInMonth;day++){
-                const date=new Date(currentYear,currentMonth,day);
-                const dayInitials=getDayInitials(date);
-                headerHTML+='<th>'+day+'<br><small style="font-size:8px;">'+dayInitials+'</small></th>';
-            }
-            headerHTML+='</tr>';
-            tableHead.innerHTML=headerHTML;
-            
-            let bodyHTML='';
-            
-            parkingSpots.forEach(spot=>{
-                const zoneClass=getZoneClass(spot);
-                const spotIcon=getSpotIcon(spot);
-                bodyHTML+='<tr class="'+zoneClass+'"><td class="posto-header">'+spot+spotIcon+'</td>';
-                
-                for(let day=1;day<=daysInMonth;day++){
-                    const year=currentYear;
-                    const month=String(currentMonth+1).padStart(2,'0');
-                    const dayStr=String(day).padStart(2,'0');
-                    const dateStr=`${year}-${month}-${dayStr}`;
-                    
-                    const resList=getReservationsForDate(spot,dateStr);
-                    const cellKey=spot+'-'+dateStr;
-                    
-                    let cellClass='free';
-                    let borderClass='';
-                    let cellAttrs='';
-                    let cellContent='';
-                    
-                    if(resList.length>0){
-                        const res=resList[0];
-                        cellReservationMap.set(cellKey,res);
-                        
-                        const allSpots=res.spot.split(',').map(s=>s.trim());
-                        const firstSpot=allSpots[0];
-                        const isFirstSpot=(spot===firstSpot);
-                        
-                        const isStart=(res.check_in_date===dateStr);
-                        const checkOutDate=new Date(res.check_out_date+'T00:00:00');
-                        const dayBeforeCheckout=new Date(checkOutDate);
-                        dayBeforeCheckout.setDate(dayBeforeCheckout.getDate()-1);
-                        const yearEnd=dayBeforeCheckout.getFullYear();
-                        const monthEnd=String(dayBeforeCheckout.getMonth()+1).padStart(2,'0');
-                        const dayEnd=String(dayBeforeCheckout.getDate()).padStart(2,'0');
-                        const isEnd=(`${yearEnd}-${monthEnd}-${dayEnd}`===dateStr);
-                        
-                        if(isStart&&isEnd){
-                            borderClass='reservation-single';
-                        }else if(isStart){
-                            borderClass='reservation-start';
-                        }else if(isEnd){
-                            borderClass='reservation-end';
-                        }
-                        
-                        // Nome esteso SOLO sul primo posto
-                        if(isFirstSpot&&isStart){
-                            cellContent='<div class="guest-name-extended">'+res.guest_name+'</div>';
-                        }
-                        
-                        if(resList.length>1){
-                            cellClass='occupied overbooking '+borderClass;
-                        }else if(res.non_spostare){
-                            cellClass='occupied locked '+borderClass;
-                        }else{
-                            cellClass='occupied '+borderClass;
-                        }
-                        
-                        const isEndCell=(isEnd||isStart&&isEnd);
-                        
-                        if(isEndCell){
-                            cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" data-is-end="true" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" onmousedown="handleResizeStart(event,\''+cellKey+'\')" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
-                        }else if(res.non_spostare){
-                            cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
-                        }else{
-                            cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'" onmouseenter="showTooltip(event,\''+cellKey+'\')" onmouseleave="scheduleHideTooltip()" ondragstart="handleDragStart(event,\''+cellKey+'\')" ondragend="handleDragEnd(event)" ondblclick="openModalByDoubleClick(\''+cellKey+'\')"';
-                        }
-                    }else{
-                        cellAttrs='onclick="openModal(\''+spot+'\',\''+dateStr+'\')"';
-                    }
-                    
-                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' ondragover="handleDragOver(event)" ondrop="handleDrop(event,\''+spot+'\',\''+dateStr+'\')" ondragenter="handleDragEnter(event)" ondragleave="handleDragLeave(event)" data-date="'+dateStr+'" data-spot="'+spot+'">'+cellContent+'</td>';
-                }
-                bodyHTML+='</tr>';
-            });
-            tableBody.innerHTML=bodyHTML;
-        }
-        
-        // RESIZE FUNCTIONS
-        function handleResizeStart(event,cellKey){
-            event.preventDefault();
-            const res=cellReservationMap.get(cellKey);
-            if(!res)return;
-            
-            const spots=res.spot.split(',').map(s=>s.trim());
-            if(spots.length>1){
-                return; // Non permettere resize su prenotazioni bus
-            }
-            
-            resizingReservation=res;
-            resizeStartDate=event.currentTarget.getAttribute('data-date');
-            
-            event.currentTarget.classList.add('resizing');
-            hideTooltip();
-            
-            document.addEventListener('mousemove',handleResizeMove);
-            document.addEventListener('mouseup',handleResizeEnd);
-        }
-        
-        function handleResizeMove(event){
-            if(!resizingReservation)return;
-            
-            const target=document.elementFromPoint(event.clientX,event.clientY);
-            const spots=resizingReservation.spot.split(',').map(s=>s.trim());
-            if(target&&target.tagName==='TD'&&spots.includes(target.getAttribute('data-spot'))){
-                document.querySelectorAll('.resize-preview').forEach(el=>el.classList.remove('resize-preview'));
-                
-                const newDate=target.getAttribute('data-date');
-                if(newDate&&newDate>=resizingReservation.check_in_date){
-                    const allCells=document.querySelectorAll(`td[data-spot="${spots[0]}"]`);
-                    allCells.forEach(cell=>{
-                        const cellDate=cell.getAttribute('data-date');
-                        if(cellDate&&cellDate>=resizingReservation.check_in_date&&cellDate<=newDate){
-                            cell.classList.add('resize-preview');
-                        }
-                    });
-                }
-            }
-        }
-        
-        async function handleResizeEnd(event){
-            document.removeEventListener('mousemove',handleResizeMove);
-            document.removeEventListener('mouseup',handleResizeEnd);
-            
-            document.querySelectorAll('.resizing').forEach(el=>el.classList.remove('resizing'));
-            document.querySelectorAll('.resize-preview').forEach(el=>el.classList.remove('resize-preview'));
-            
-            if(!resizingReservation)return;
-            
-            const target=document.elementFromPoint(event.clientX,event.clientY);
-            const spots=resizingReservation.spot.split(',').map(s=>s.trim());
-            if(target&&target.tagName==='TD'){
-                const newEndDate=target.getAttribute('data-date');
-                const spot=target.getAttribute('data-spot');
-                
-                if(newEndDate&&spots.includes(spot)&&newEndDate>=resizingReservation.check_in_date){
-                    const lastDay=new Date(newEndDate+'T00:00:00');
-                    lastDay.setDate(lastDay.getDate()+1);
-                    const newCheckOut=lastDay.toISOString().split('T')[0];
-                    
-                    if(newCheckOut!==resizingReservation.check_out_date){
-                        const{error}=await sb.from('reservations').update({
-                            check_out_date:newCheckOut
-                        }).eq('id',resizingReservation.id);
-                        
-                        if(error){
-                            alert('❌ Errore nel ridimensionamento');
-                        }else{
-                            loadReservations();
-                        }
-                    }
-                }
-            }
-            
-            resizingReservation=null;
-            resizeStartDate=null;
-        }
-        
-        function openModalByDoubleClick(cellKey){
-            const res=cellReservationMap.get(cellKey);
-            if(!res)return;
-            hideTooltip();
-            openModalWithReservation(res);
-        }
-        
-        function handleDragStart(event,cellKey){
-            const res=cellReservationMap.get(cellKey);
-            if(!res)return;
-            if(res.non_spostare){
-                event.preventDefault();
-                return;
-            }
-            const spots=res.spot.split(',').map(s=>s.trim());
-            if(spots.length>1){
-                event.preventDefault();
-                alert('⚠️ Non puoi trascinare prenotazioni bus con più posti');
-                return;
-            }
-            draggedReservation=res;
-            event.currentTarget.classList.add('dragging');
-            hideTooltip();
-        }
-        
-        function handleDragEnd(event){
-            event.currentTarget.classList.remove('dragging');
-            draggedReservation=null;
-            document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
-        }
-        
-        function handleDragOver(event){
-            event.preventDefault();
-        }
-        
-        function handleDragEnter(event){
-            if(draggedReservation&&event.currentTarget.tagName==='TD'){
-                event.currentTarget.classList.add('drag-over');
-            }
-        }
-        
-        function handleDragLeave(event){
-            event.currentTarget.classList.remove('drag-over');
-        }
-        
-        async function handleDrop(event,newSpot,dateStr){
-            event.preventDefault();
-            event.currentTarget.classList.remove('drag-over');
-            
-            if(!draggedReservation)return;
-            
-            const existingRes=getReservationsForDate(newSpot,dateStr);
-            if(existingRes.length>0&&!confirm('⚠️ Attenzione: c\'è già una prenotazione su questo posto nelle stesse date. Vuoi creare un overbooking temporaneo?')){
-                return;
-            }
-            
-            const{error}=await sb.from('reservations').update({spot:newSpot}).eq('id',draggedReservation.id);
-            
-            if(error){
-                alert('❌ Errore nello spostamento');
-                return;
-            }
-            
-            alert('✅ Prenotazione spostata con successo!');
-            loadReservations();
-        }
-        
-        function showAddModal(){
-            document.getElementById('modalTitle').textContent='Nuova Prenotazione';
-            document.getElementById('reservationId').value='';
-            document.getElementById('guestName').value='';
-            document.getElementById('parkingSpot').value='';
-            document.getElementById('checkInDate').value='';
-            document.getElementById('checkOutDate').value='';
-            document.getElementById('licensePlate').value='';
-            document.getElementById('notes').value='';
-            document.getElementById('isBus').checked=false;
-            document.getElementById('nonSpostare').checked=false;
-            document.getElementById('deleteBtn').style.display='none';
-            toggleBusMode();
-            document.querySelectorAll('.spot-check').forEach(cb=>cb.checked=false);
-            document.getElementById('reservationModal').classList.add('active');
-        }
-        
-        function openModalWithReservation(res){
-            document.getElementById('modalTitle').textContent='Modifica Prenotazione';
-            document.getElementById('reservationId').value=res.id;
-            document.getElementById('guestName').value=res.guest_name;
-            
-            const spots=res.spot.split(',').map(s=>s.trim());
-            if(spots.length>1){
-                document.getElementById('isBus').checked=true;
-                toggleBusMode();
-                document.querySelectorAll('.spot-check').forEach(cb=>{
-                    cb.checked=spots.includes(cb.value);
-                });
-            }else{
-                document.getElementById('isBus').checked=false;
-                toggleBusMode();
-                document.getElementById('parkingSpot').value=res.spot;
-            }
-            
-            document.getElementById('checkInDate').value=res.check_in_date;
-            document.getElementById('checkOutDate').value=res.check_out_date;
-            document.getElementById('licensePlate').value=res.license_plate||'';
-            document.getElementById('notes').value=res.notes||'';
-            document.getElementById('nonSpostare').checked=res.non_spostare||false;
-            document.getElementById('deleteBtn').style.display='block';
-            updateAvailableSpots();
-            document.getElementById('reservationModal').classList.add('active');
-        }
-        
-        function openModal(spot,dateStr){
-            const resList=getReservationsForDate(spot,dateStr);
-            if(resList.length>0){
-                openModalWithReservation(resList[0]);
-            }else{
-                document.getElementById('modalTitle').textContent='Nuova Prenotazione';
-                document.getElementById('reservationId').value='';
-                document.getElementById('guestName').value='';
-                document.getElementById('isBus').checked=false;
-                toggleBusMode();
-                document.getElementById('parkingSpot').value=spot;
-                document.getElementById('checkInDate').value=dateStr;
-                document.getElementById('checkOutDate').value='';
-                document.getElementById('licensePlate').value='';
-                document.getElementById('notes').value='';
-                document.getElementById('nonSpostare').checked=false;
-                document.getElementById('deleteBtn').style.display='none';
-                document.getElementById('reservationModal').classList.add('active');
-            }
-        }
-        
-        function closeModal(){
-            document.getElementById('reservationModal').classList.remove('active');
-        }
-        
-        async function saveReservation(event){
-            event.preventDefault();
-            const id=document.getElementById('reservationId').value;
-            
-            let spot;
-            const isBus=document.getElementById('isBus').checked;
-            if(isBus){
-                const selectedSpots=Array.from(document.querySelectorAll('.spot-check:checked')).map(cb=>cb.value);
-                if(selectedSpots.length===0){
-                    alert('⚠️ Seleziona almeno un posto per il bus');
-                    return;
-                }
-                spot=selectedSpots.join(', ');
-            }else{
-                spot=document.getElementById('parkingSpot').value;
-                if(!spot){
-                    alert('⚠️ Seleziona un posto');
-                    return;
-                }
-            }
-            
-            const data={
-                spot:spot,
-                guest_name:document.getElementById('guestName').value,
-                check_in_date:document.getElementById('checkInDate').value,
-                check_out_date:document.getElementById('checkOutDate').value,
-                license_plate:document.getElementById('licensePlate').value,
-                notes:document.getElementById('notes').value,
-                non_spostare:document.getElementById('nonSpostare').checked
-            };
-            if(data.check_in_date>=data.check_out_date){
-                alert('⚠️ La data di partenza deve essere successiva alla data di arrivo!');
-                return;
-            }
-            let result;
-            if(id){
-                result=await sb.from('reservations').update(data).eq('id',id);
-            }else{
-                result=await sb.from('reservations').insert([data]);
-            }
-            if(result.error){
-                alert('❌ Errore nel salvataggio');
-                return;
-            }
-            closeModal();
-            alert('✅ Prenotazione salvata con successo!');
-            loadReservations();
-        }
-        
-        async function deleteReservation(){
-            if(!confirm('⚠️ Sei sicuro di voler eliminare questa prenotazione?'))return;
-            const id=document.getElementById('reservationId').value;
-            const{error}=await sb.from('reservations').delete().eq('id',id);
-            if(error){
-                alert('❌ Errore nell\'eliminazione');
-                return;
-            }
-            closeModal();
-            alert('🗑️ Prenotazione eliminata!');
-            loadReservations();
-        }
-        
-        window.onload=init;
-    </script>
-</body>
-</html>
+            const newSpot=prompt('🅿️ Nuovo posto
