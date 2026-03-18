@@ -926,8 +926,17 @@
             
             if(!checkIn||!checkOut)return;
             
+            // MODIFICA: Prende l'ID della prenotazione corrente (se stiamo modificando)
+            const currentReservationId=document.getElementById('reservationId').value;
+            
             const occupiedSpots=new Set();
             reservations.forEach(res=>{
+                // MODIFICA: Escludi la prenotazione corrente dal controllo!
+                if(currentReservationId && res.id.toString()===currentReservationId){
+                    return; // Salta questa prenotazione
+                }
+                
+                // Controlla solo le ALTRE prenotazioni
                 if(!(checkOut<=res.check_in_date||checkIn>=res.check_out_date)){
                     const spots=res.spot.split(',').map(s=>s.trim());
                     spots.forEach(s=>occupiedSpots.add(s));
