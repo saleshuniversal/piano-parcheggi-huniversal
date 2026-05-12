@@ -30,7 +30,7 @@
         .header {
             background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
             color: white;
-            padding: 25px 30px;
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -67,7 +67,7 @@
         
         .controls {
             background: white;
-            padding: 20px 30px;
+            padding: 15px 20px;
             border-bottom: 2px solid #e5e7eb;
             display: flex;
             gap: 15px;
@@ -123,7 +123,7 @@
         }
         
         .legend {
-            padding: 15px 30px;
+            padding: 10px 20px;
             background: #f9fafb;
             display: flex;
             gap: 25px;
@@ -149,7 +149,7 @@
             padding: 20px;
             overflow-x: auto;
             overflow-y: auto;
-            max-height: calc(100vh - 250px);
+            height: calc(100vh - 250px);
             position: relative;
         }
         
@@ -230,7 +230,6 @@
             padding: 0 2px;
         }
         
-        /* STATO: RESERVED (giallo) */
         .occupied.status-reserved {
             background: #fef9c3;
             border-top: 2px solid #eab308 !important;
@@ -259,7 +258,6 @@
             border-radius: 6px;
         }
         
-        /* STATO: CHECKED_IN (rosso) */
         .occupied.status-checked_in {
             background: #fee2e2;
             border-top: 2px solid #dc2626 !important;
@@ -288,7 +286,6 @@
             border-radius: 6px;
         }
         
-        /* STATO: CHECKED_OUT (grigio) */
         .occupied.status-checked_out {
             background: #e5e7eb;
             border-top: 2px solid #6b7280 !important;
@@ -371,6 +368,33 @@
         .drag-over {
             background: #fef3c7 !important;
             border: 2px dashed #f59e0b !important;
+        }
+        
+        .occupancy-row {
+            position: sticky;
+            bottom: 0;
+            z-index: 50;
+        }
+        
+        .occupancy-label {
+            background: #1e3a8a !important;
+            color: white !important;
+            font-weight: 700;
+            font-size: 11px;
+            text-align: center;
+            padding: 8px 4px;
+            position: sticky;
+            left: 0;
+            z-index: 51;
+        }
+        
+        .occupancy-cell {
+            text-align: center;
+            padding: 8px 2px;
+            border: 1px solid #d1d5db;
+            font-weight: 700;
+            position: sticky;
+            bottom: 0;
         }
         
         #contextMenu {
@@ -858,6 +882,18 @@
         function getSpotIcon(spot){
             const num=parseInt(spot.replace('PK ',''));
             return(num===16||num===17)?' ⚡':'';
+        }
+        
+        function getValidParkingSpotsForStats(){
+            return parkingSpots.filter(spot=>{
+                if(spot==='BIDONI')return false;
+                if(spot==='PK ESTERNI')return false;
+                if(spot==='PK H')return false;
+                if(spot==='NAVETTA')return false;
+                if(spot==='PK 16')return false;
+                if(spot==='PK 17')return false;
+                return true;
+            });
         }
         
         function getStatusLabel(status){
@@ -1463,6 +1499,36 @@
                 }
                 bodyHTML+='</tr>';
             });
+            
+            const validSpots=getValidParkingSpotsForStats();
+            const totalValidSpots=validSpots.length;
+            
+            bodyHTML+='<tr class="occupancy-row"><td class="occupancy-label">% Occupazione</td>';
+            
+            for(let day=1;day<=daysInMonth;day++){
+                const year=currentYear;
+                const month=String(currentMonth+1).padStart(2,'0');
+                const dayStr=String(day).padStart(2,'0');
+                const dateStr=`${year}-${month}-${dayStr}`;
+                
+                let occupiedCount=0;
+                validSpots.forEach(spot=>{
+                    const resList=getReservationsForDate(spot,dateStr);
+                    if(resList.length>0){
+                        occupiedCount++;
+                    }
+                });
+                
+                const percentage=Math.round((occupiedCount/totalValidSpots)*100);
+                let bgColor='#d1fae5';
+                if(percentage>=80)bgColor='#fca5a5';
+                else if(percentage>=60)bgColor='#fed7aa';
+                else if(percentage>=40)bgColor='#fef08a';
+                
+                bodyHTML+='<td class="occupancy-cell" style="background:'+bgColor+';font-weight:700;font-size:11px;">'+percentage+'%</td>';
+            }
+            bodyHTML+='</tr>';
+            
             tableBody.innerHTML=bodyHTML;
             
             setupCellEvents();
@@ -1470,6 +1536,8 @@
         
         function setupCellEvents(){
             document.querySelectorAll('td').forEach(cell=>{
+                if(cell.classList.contains('occupancy-cell')||cell.classList.contains('occupancy-label'))return;
+                
                 cell.addEventListener('mouseenter',function(e){
                     if(cell.classList.contains('occupied')){
                         const cellKey=cell.getAttribute('data-cell-key');
