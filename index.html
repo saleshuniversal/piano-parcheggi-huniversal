@@ -34,8 +34,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
         }
         
         .header h1 {
@@ -88,8 +86,7 @@
             text-transform: uppercase;
         }
         
-        .control-group select,
-        .control-group input {
+        .control-group select {
             padding: 8px 12px;
             border: 2px solid #e5e7eb;
             border-radius: 6px;
@@ -109,16 +106,6 @@
         
         .btn-primary {
             background: #3b82f6;
-            color: white;
-        }
-        
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-        
-        .btn-danger {
-            background: #ef4444;
             color: white;
         }
         
@@ -150,7 +137,6 @@
             overflow-x: auto;
             overflow-y: auto;
             height: calc(100vh - 250px);
-            position: relative;
         }
         
         table {
@@ -179,7 +165,6 @@
         th.posto-header {
             background: #1e3a8a;
             color: white;
-            font-size: 11px;
             min-width: 90px;
             width: 90px;
             position: sticky;
@@ -193,13 +178,9 @@
             vertical-align: middle;
             width: 35px;
             height: 35px;
-            min-height: 35px;
-            max-height: 35px;
             cursor: pointer;
-            transition: all 0.2s;
             font-size: 8px;
             position: relative;
-            overflow: visible;
         }
         
         td:first-child {
@@ -209,7 +190,7 @@
             background: white;
         }
         
-        .guest-name-extended {
+        .guest-name {
             position: absolute;
             left: 0;
             right: 0;
@@ -220,67 +201,51 @@
             white-space: nowrap;
             text-align: center;
             pointer-events: none;
-            z-index: 1;
             padding: 0 2px;
-        }
-        
-        .occupied {
-            background: #fee2e2;
-            border-top: 2px solid #dc2626 !important;
-            border-bottom: 2px solid #dc2626 !important;
-            cursor: grab !important;
-        }
-        
-        .occupied .guest-name-extended {
-            color: #7f1d1d;
-        }
-        
-        .occupied.reservation-start {
-            border-left: 2px solid #dc2626 !important;
-            border-top-left-radius: 6px;
-            border-bottom-left-radius: 6px;
-        }
-        
-        .occupied.reservation-end {
-            border-right: 2px solid #dc2626 !important;
-            border-top-right-radius: 6px;
-            border-bottom-right-radius: 6px;
-        }
-        
-        .occupied.reservation-single {
-            border: 2px solid #dc2626 !important;
-            border-radius: 6px;
-        }
-        
-        .occupied.locked {
-            background: #e9d5ff !important;
-            border-top: 2px solid #9333ea !important;
-            border-bottom: 2px solid #9333ea !important;
-            cursor: not-allowed !important;
-        }
-        
-        .occupied.locked .guest-name-extended {
-            color: #581c87;
-        }
-        
-        .overbooking {
-            background: repeating-linear-gradient(
-                45deg,
-                #fca5a5,
-                #fca5a5 8px,
-                #ef4444 8px,
-                #ef4444 16px
-            ) !important;
-            animation: blink 1s infinite;
-        }
-        
-        @keyframes blink {
-            0%, 50%, 100% { opacity: 1; }
-            25%, 75% { opacity: 0.7; }
         }
         
         .free {
             background: #d1fae5;
+        }
+        
+        .status-reserved {
+            background: #fef9c3 !important;
+            border-top: 2px solid #eab308 !important;
+            border-bottom: 2px solid #eab308 !important;
+        }
+        
+        .status-reserved .guest-name {
+            color: #854d0e;
+        }
+        
+        .status-checked_in {
+            background: #fee2e2 !important;
+            border-top: 2px solid #dc2626 !important;
+            border-bottom: 2px solid #dc2626 !important;
+        }
+        
+        .status-checked_in .guest-name {
+            color: #7f1d1d;
+        }
+        
+        .status-checked_out {
+            background: #e5e7eb !important;
+            border-top: 2px solid #6b7280 !important;
+            border-bottom: 2px solid #6b7280 !important;
+        }
+        
+        .status-checked_out .guest-name {
+            color: #1f2937;
+        }
+        
+        .locked {
+            background: #e9d5ff !important;
+            border-top: 2px solid #9333ea !important;
+            border-bottom: 2px solid #9333ea !important;
+        }
+        
+        .locked .guest-name {
+            color: #581c87;
         }
         
         .occupancy-row {
@@ -293,7 +258,6 @@
             background: #1e3a8a !important;
             color: white !important;
             font-weight: 700;
-            font-size: 11px;
             text-align: center;
             padding: 8px 4px;
             position: sticky;
@@ -306,8 +270,6 @@
             padding: 8px 2px;
             border: 1px solid #d1d5db;
             font-weight: 700;
-            position: sticky;
-            bottom: 0;
         }
         
         #contextMenu {
@@ -326,9 +288,6 @@
             padding: 10px 16px;
             cursor: pointer;
             font-size: 14px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
             transition: background 0.2s;
         }
         
@@ -345,75 +304,6 @@
             height: 1px;
             background: #e5e7eb;
             margin: 4px 0;
-        }
-        
-        #globalTooltip {
-            visibility: hidden;
-            position: fixed;
-            background-color: #1f2937;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 12px;
-            z-index: 10000;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-            min-width: 250px;
-            max-width: 350px;
-            pointer-events: auto;
-        }
-        
-        .tooltip-header {
-            font-weight: 700;
-            font-size: 14px;
-            margin-bottom: 8px;
-            padding-bottom: 8px;
-            border-bottom: 1px solid rgba(255,255,255,0.2);
-            color: #60a5fa;
-        }
-        
-        .tooltip-row {
-            margin: 6px 0;
-            display: flex;
-            gap: 8px;
-        }
-        
-        .tooltip-label {
-            font-weight: 600;
-            color: #9ca3af;
-            min-width: 80px;
-        }
-        
-        .tooltip-value {
-            color: white;
-        }
-        
-        .tooltip-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid rgba(255,255,255,0.2);
-        }
-        
-        .tooltip-btn {
-            flex: 1;
-            padding: 6px 12px;
-            border: none;
-            border-radius: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .tooltip-btn-edit {
-            background: #3b82f6;
-            color: white;
-        }
-        
-        .tooltip-btn-delete {
-            background: #ef4444;
-            color: white;
         }
         
         .modal {
@@ -475,19 +365,14 @@
         }
         
         .form-group input,
-        .form-group textarea,
-        .form-group select {
+        .form-group select,
+        .form-group textarea {
             width: 100%;
             padding: 10px;
             border: 2px solid #e5e7eb;
             border-radius: 6px;
             font-family: inherit;
             font-size: 14px;
-        }
-        
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
         }
         
         .checkbox-group {
@@ -503,7 +388,6 @@
         .checkbox-group input[type="checkbox"] {
             width: 20px;
             height: 20px;
-            cursor: pointer;
         }
         
         .checkbox-group label {
@@ -520,10 +404,19 @@
             margin-top: 25px;
         }
         
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
         .loading {
             text-align: center;
             padding: 50px;
-            font-size: 18px;
             color: #6b7280;
         }
         
@@ -579,7 +472,9 @@
         
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
-            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626;"></div><span>Occupato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fef9c3; border: 2px solid #eab308;"></div><span>Prenotato</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #fee2e2; border: 2px solid #dc2626;"></div><span>Check-in</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #e5e7eb; border: 2px solid #6b7280;"></div><span>Check-out</span></div>
             <div class="legend-item"><div class="legend-color" style="background: #e9d5ff; border: 2px solid #9333ea;"></div><span>Non spostabile</span></div>
         </div>
         
@@ -593,12 +488,12 @@
     </div>
     
     <div id="contextMenu">
-        <div class="context-menu-item" id="menuEdit">
-            ✏️ Modifica
-        </div>
-        <div class="context-menu-item danger" id="menuDelete">
-            🗑️ Elimina
-        </div>
+        <div class="context-menu-item" id="menuCheckIn">✅ Check-in (Arrivato)</div>
+        <div class="context-menu-item" id="menuCheckOut">🏁 Check-out (Partito)</div>
+        <div class="context-menu-item" id="menuReserved">🔄 Ripristina Prenotato</div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" id="menuEdit">✏️ Modifica</div>
+        <div class="context-menu-item danger" id="menuDelete">🗑️ Elimina</div>
     </div>
     
     <div class="modal" id="reservationModal">
@@ -609,44 +504,36 @@
             </div>
             <form id="reservationForm">
                 <input type="hidden" id="reservationId">
-                
                 <div class="form-group">
                     <label>Ospite *</label>
                     <input type="text" id="guestName" required>
                 </div>
-                
                 <div class="form-group">
                     <label>Posto *</label>
                     <select id="parkingSpot" required>
                         <option value="">Seleziona...</option>
                     </select>
                 </div>
-                
                 <div class="form-group">
                     <label>Arrivo *</label>
                     <input type="date" id="checkInDate" required>
                 </div>
-                
                 <div class="form-group">
                     <label>Partenza *</label>
                     <input type="date" id="checkOutDate" required>
                 </div>
-                
                 <div class="form-group">
                     <label>Targa</label>
                     <input type="text" id="licensePlate">
                 </div>
-                
                 <div class="form-group">
                     <label>Note</label>
                     <textarea id="notes"></textarea>
                 </div>
-                
                 <div class="checkbox-group">
                     <input type="checkbox" id="nonSpostare">
                     <label for="nonSpostare">🔒 Non spostare</label>
                 </div>
-                
                 <div class="modal-actions">
                     <button type="button" class="btn btn-danger" id="deleteBtn" style="display: none;">🗑️ Elimina</button>
                     <div>
@@ -657,8 +544,6 @@
             </form>
         </div>
     </div>
-    
-    <div id="globalTooltip"></div>
     
     <script>
         const SUPABASE_URL = 'https://nsettzmyswlfrnzwvpsq.supabase.co';
@@ -671,8 +556,8 @@
         let reservations = [];
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
-        let cellReservationMap = new Map();
-        let contextMenuReservation = null;
+        let cellMap = new Map();
+        let contextRes = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -686,70 +571,40 @@
             return'';
         }
         
-        function getSpotIcon(spot){
-            const num=parseInt(spot.replace('PK ',''));
-            return(num===16||num===17)?' ⚡':'';
-        }
-        
-        function getValidParkingSpotsForStats(){
-            return parkingSpots.filter(spot=>{
-                if(spot==='BIDONI')return false;
-                if(spot==='PK ESTERNI')return false;
-                if(spot==='PK H')return false;
-                if(spot==='NAVETTA')return false;
-                if(spot==='PK 16')return false;
-                if(spot==='PK 17')return false;
-                return true;
-            });
-        }
-        
         async function loadReservations(){
-            console.log('Caricamento prenotazioni...');
             const {data, error} = await sb.from('reservations').select('*');
-            
-            if(error){
-                console.error('ERRORE Supabase:', error);
-                alert('Errore caricamento prenotazioni');
-                return;
-            }
-            
-            console.log('Prenotazioni caricate:', data);
+            if(error){alert('Errore caricamento'); return;}
             reservations = data || [];
             document.getElementById('loading').style.display='none';
             document.getElementById('parkingTable').style.display='table';
             renderCalendar();
         }
         
-        function populateParkingSpots(){
-            const select=document.getElementById('parkingSpot');
-            select.innerHTML='<option value="">Seleziona...</option>';
-            parkingSpots.forEach(spot=>{
-                const option=document.createElement('option');
-                option.value=spot;
-                option.textContent=spot+getSpotIcon(spot);
-                select.appendChild(option);
+        function populateSpots(){
+            const sel=document.getElementById('parkingSpot');
+            sel.innerHTML='<option value="">Seleziona...</option>';
+            parkingSpots.forEach(s=>{
+                const opt=document.createElement('option');
+                opt.value=s;
+                opt.textContent=s;
+                sel.appendChild(opt);
             });
         }
         
-        function getDaysInMonth(month,year){
-            return new Date(year,month+1,0).getDate();
+        function getDaysInMonth(m,y){
+            return new Date(y,m+1,0).getDate();
         }
         
-        function getDayInitials(date){
+        function getDayInitials(d){
             const days=['DOM','LUN','MAR','MER','GIO','VEN','SAB'];
-            return days[date.getDay()];
+            return days[d.getDay()];
         }
         
         function getReservationsForDate(spot,dateStr){
-            return reservations.filter(res=>{
-                const spots=res.spot.split(',').map(s=>s.trim());
-                return spots.includes(spot)&&dateStr>=res.check_in_date&&dateStr<res.check_out_date;
+            return reservations.filter(r=>{
+                const spots=r.spot.split(',').map(s=>s.trim());
+                return spots.includes(spot)&&dateStr>=r.check_in_date&&dateStr<r.check_out_date;
             });
-        }
-        
-        function formatDate(dateStr){
-            const date=new Date(dateStr+'T00:00:00');
-            return date.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
         }
         
         function changeMonth(){
@@ -758,149 +613,112 @@
             renderCalendar();
         }
         
+        function getValidSpots(){
+            return parkingSpots.filter(s=> !['BIDONI','PK ESTERNI','PK H','NAVETTA','PK 16','PK 17'].includes(s));
+        }
+        
         function renderCalendar(){
-            cellReservationMap.clear();
-            const daysInMonth=getDaysInMonth(currentMonth,currentYear);
-            const tableHead=document.getElementById('tableHead');
-            const tableBody=document.getElementById('tableBody');
+            cellMap.clear();
+            const days=getDaysInMonth(currentMonth,currentYear);
+            const head=document.getElementById('tableHead');
+            const body=document.getElementById('tableBody');
             
-            let headerHTML='<tr><th class="posto-header">Posto</th>';
-            for(let day=1;day<=daysInMonth;day++){
-                const date=new Date(currentYear,currentMonth,day);
-                const dayInitials=getDayInitials(date);
-                headerHTML+='<th>'+day+'<br><small style="font-size:8px;">'+dayInitials+'</small></th>';
+            let hhtml='<tr><th class="posto-header">Posto</th>';
+            for(let d=1;d<=days;d++){
+                const dt=new Date(currentYear,currentMonth,d);
+                hhtml+='<th>'+d+'<br><small>'+getDayInitials(dt)+'</small></th>';
             }
-            headerHTML+='</tr>';
-            tableHead.innerHTML=headerHTML;
+            hhtml+='</tr>';
+            head.innerHTML=hhtml;
             
-            let bodyHTML='';
-            
+            let bhtml='';
             parkingSpots.forEach(spot=>{
-                const zoneClass=getZoneClass(spot);
-                const spotIcon=getSpotIcon(spot);
-                bodyHTML+='<tr class="'+zoneClass+'"><td class="posto-header">'+spot+spotIcon+'</td>';
+                const zone=getZoneClass(spot);
+                bhtml+='<tr class="'+zone+'"><td class="posto-header">'+spot+'</td>';
                 
-                for(let day=1;day<=daysInMonth;day++){
-                    const year=currentYear;
-                    const month=String(currentMonth+1).padStart(2,'0');
-                    const dayStr=String(day).padStart(2,'0');
-                    const dateStr=`${year}-${month}-${dayStr}`;
+                for(let d=1;d<=days;d++){
+                    const y=currentYear;
+                    const m=String(currentMonth+1).padStart(2,'0');
+                    const ds=String(d).padStart(2,'0');
+                    const dateStr=y+'-'+m+'-'+ds;
                     
                     const resList=getReservationsForDate(spot,dateStr);
-                    const cellKey=spot+'-'+dateStr;
+                    const key=spot+'-'+dateStr;
                     
-                    let cellClass='free';
-                    let cellAttrs='';
-                    let cellContent='';
+                    let cls='free';
+                    let html='';
                     
                     if(resList.length>0){
                         const res=resList[0];
-                        cellReservationMap.set(cellKey,res);
+                        cellMap.set(key,res);
                         
                         const allSpots=res.spot.split(',').map(s=>s.trim());
-                        const firstSpot=allSpots[0];
-                        const isFirstSpot=(spot===firstSpot);
-                        
+                        const isFirst=(spot===allSpots[0]);
                         const isStart=(res.check_in_date===dateStr);
-                        const checkOutDate=new Date(res.check_out_date+'T00:00:00');
-                        const dayBeforeCheckout=new Date(checkOutDate);
-                        dayBeforeCheckout.setDate(dayBeforeCheckout.getDate()-1);
-                        const yearEnd=dayBeforeCheckout.getFullYear();
-                        const monthEnd=String(dayBeforeCheckout.getMonth()+1).padStart(2,'0');
-                        const dayEnd=String(dayBeforeCheckout.getDate()).padStart(2,'0');
-                        const isEnd=(`${yearEnd}-${monthEnd}-${dayEnd}`===dateStr);
                         
-                        let borderClass='';
-                        if(isStart&&isEnd){
-                            borderClass='reservation-single';
-                        }else if(isStart){
-                            borderClass='reservation-start';
-                        }else if(isEnd){
-                            borderClass='reservation-end';
+                        if(isFirst&&isStart){
+                            html='<div class="guest-name">'+res.guest_name+'</div>';
                         }
                         
-                        if(isFirstSpot&&isStart){
-                            cellContent='<div class="guest-name-extended">'+res.guest_name+'</div>';
-                        }
-                        
-                        if(resList.length>1){
-                            cellClass='occupied overbooking '+borderClass;
-                        }else if(res.non_spostare){
-                            cellClass='occupied locked '+borderClass;
-                        }else{
-                            cellClass='occupied '+borderClass;
-                        }
-                        
-                        cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'"';
-                    }else{
-                        cellAttrs='data-date="'+dateStr+'" data-spot="'+spot+'"';
+                        const status=res.status||'reserved';
+                        cls='status-'+status;
+                        if(res.non_spostare)cls='locked';
                     }
                     
-                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' data-date="'+dateStr+'" data-spot="'+spot+'">'+cellContent+'</td>';
+                    bhtml+='<td class="'+cls+'" data-key="'+key+'" data-date="'+dateStr+'" data-spot="'+spot+'">'+html+'</td>';
                 }
-                bodyHTML+='</tr>';
+                bhtml+='</tr>';
             });
             
-            const validSpots=getValidParkingSpotsForStats();
-            const totalValidSpots=validSpots.length;
+            const validSpots=getValidSpots();
+            const total=validSpots.length;
+            bhtml+='<tr class="occupancy-row"><td class="occupancy-label">% Occupazione</td>';
             
-            bodyHTML+='<tr class="occupancy-row"><td class="occupancy-label">% Occupazione</td>';
-            
-            for(let day=1;day<=daysInMonth;day++){
-                const year=currentYear;
-                const month=String(currentMonth+1).padStart(2,'0');
-                const dayStr=String(day).padStart(2,'0');
-                const dateStr=`${year}-${month}-${dayStr}`;
+            for(let d=1;d<=days;d++){
+                const y=currentYear;
+                const m=String(currentMonth+1).padStart(2,'0');
+                const ds=String(d).padStart(2,'0');
+                const dateStr=y+'-'+m+'-'+ds;
                 
-                let occupiedCount=0;
-                validSpots.forEach(spot=>{
-                    const resList=getReservationsForDate(spot,dateStr);
-                    if(resList.length>0){
-                        occupiedCount++;
-                    }
+                let occ=0;
+                validSpots.forEach(s=>{
+                    if(getReservationsForDate(s,dateStr).length>0)occ++;
                 });
                 
-                const percentage=Math.round((occupiedCount/totalValidSpots)*100);
-                let bgColor='#d1fae5';
-                if(percentage>=80)bgColor='#fca5a5';
-                else if(percentage>=60)bgColor='#fed7aa';
-                else if(percentage>=40)bgColor='#fef08a';
+                const pct=Math.round((occ/total)*100);
+                let bg='#d1fae5';
+                if(pct>=80)bg='#fca5a5';
+                else if(pct>=60)bg='#fed7aa';
+                else if(pct>=40)bg='#fef08a';
                 
-                bodyHTML+='<td class="occupancy-cell" style="background:'+bgColor+';font-weight:700;font-size:11px;">'+percentage+'%</td>';
+                bhtml+='<td class="occupancy-cell" style="background:'+bg+'">'+pct+'%</td>';
             }
-            bodyHTML+='</tr>';
+            bhtml+='</tr>';
             
-            tableBody.innerHTML=bodyHTML;
-            
-            setupCellEvents();
+            body.innerHTML=bhtml;
+            setupEvents();
         }
         
-        function setupCellEvents(){
-            document.querySelectorAll('td').forEach(cell=>{
-                if(cell.classList.contains('occupancy-cell')||cell.classList.contains('occupancy-label'))return;
+        function setupEvents(){
+            document.querySelectorAll('td').forEach(td=>{
+                if(td.classList.contains('occupancy-cell')||td.classList.contains('occupancy-label'))return;
                 
-                cell.addEventListener('dblclick',function(){
-                    const cellKey=cell.getAttribute('data-cell-key');
-                    if(cellKey){
-                        const res=cellReservationMap.get(cellKey);
-                        if(res){
-                            openModalWithReservation(res);
-                        }
+                td.addEventListener('dblclick',function(){
+                    const key=td.getAttribute('data-key');
+                    if(key){
+                        const res=cellMap.get(key);
+                        if(res)openEdit(res);
                     }else{
-                        const spot=cell.getAttribute('data-spot');
-                        const dateStr=cell.getAttribute('data-date');
-                        if(spot&&dateStr){
-                            openModal(spot,dateStr);
-                        }
+                        openNew(td.getAttribute('data-spot'),td.getAttribute('data-date'));
                     }
                 });
                 
-                cell.addEventListener('contextmenu',function(e){
+                td.addEventListener('contextmenu',function(e){
                     e.preventDefault();
-                    const cellKey=cell.getAttribute('data-cell-key');
-                    const res=cellReservationMap.get(cellKey);
+                    const key=td.getAttribute('data-key');
+                    const res=cellMap.get(key);
                     if(res){
-                        contextMenuReservation=res;
+                        contextRes=res;
                         const menu=document.getElementById('contextMenu');
                         menu.style.display='block';
                         menu.style.left=e.clientX+'px';
@@ -910,39 +728,37 @@
             });
         }
         
-        function setupContextMenu(){
-            document.addEventListener('click',function(){
-                document.getElementById('contextMenu').style.display='none';
-            });
-        }
-        
-        function editFromContext(){
-            if(contextMenuReservation){
-                openModalWithReservation(contextMenuReservation);
-            }
+        document.addEventListener('click',()=>{
             document.getElementById('contextMenu').style.display='none';
-        }
+        });
         
-        async function deleteFromContext(){
+        async function changeStatus(newStatus){
             document.getElementById('contextMenu').style.display='none';
-            if(!contextMenuReservation)return;
-            if(!confirm('Eliminare la prenotazione?'))return;
+            if(!contextRes)return;
             
-            const {error}=await sb.from('reservations').delete().eq('id',contextMenuReservation.id);
+            const {error}=await sb.from('reservations').update({status:newStatus}).eq('id',contextRes.id);
+            
             if(error){
-                alert('Errore eliminazione');
+                alert('❌ Errore');
                 return;
             }
-            alert('Prenotazione eliminata!');
+            
+            const msg={
+                'reserved':'🔄 Stato: Prenotato',
+                'checked_in':'✅ Stato: Check-in',
+                'checked_out':'🏁 Stato: Check-out'
+            };
+            
+            alert(msg[newStatus]||'✅ Aggiornato');
             loadReservations();
         }
         
-        function showAddModal(){
+        function openNew(spot,date){
             document.getElementById('modalTitle').textContent='Nuova Prenotazione';
             document.getElementById('reservationId').value='';
             document.getElementById('guestName').value='';
-            document.getElementById('parkingSpot').value='';
-            document.getElementById('checkInDate').value='';
+            document.getElementById('parkingSpot').value=spot||'';
+            document.getElementById('checkInDate').value=date||'';
             document.getElementById('checkOutDate').value='';
             document.getElementById('licensePlate').value='';
             document.getElementById('notes').value='';
@@ -951,7 +767,7 @@
             document.getElementById('reservationModal').classList.add('active');
         }
         
-        function openModalWithReservation(res){
+        function openEdit(res){
             document.getElementById('modalTitle').textContent='Modifica Prenotazione';
             document.getElementById('reservationId').value=res.id;
             document.getElementById('guestName').value=res.guest_name;
@@ -965,119 +781,82 @@
             document.getElementById('reservationModal').classList.add('active');
         }
         
-        function openModal(spot,dateStr){
-            showAddModal();
-            document.getElementById('parkingSpot').value=spot;
-            document.getElementById('checkInDate').value=dateStr;
-        }
-        
         function closeModal(){
             document.getElementById('reservationModal').classList.remove('active');
         }
         
         async function saveReservation(e){
             e.preventDefault();
-            console.log('Salvataggio prenotazione...');
             
             const id=document.getElementById('reservationId').value;
-            const spot=document.getElementById('parkingSpot').value;
-            const guestName=document.getElementById('guestName').value;
-            const checkInDate=document.getElementById('checkInDate').value;
-            const checkOutDate=document.getElementById('checkOutDate').value;
-            
-            if(!spot || !guestName || !checkInDate || !checkOutDate){
-                alert('Compila tutti i campi obbligatori!');
-                return;
-            }
-            
-            if(checkInDate >= checkOutDate){
-                alert('La data di partenza deve essere dopo la data di arrivo!');
-                return;
-            }
-            
-            const data = {
-                spot: spot,
-                guest_name: guestName,
-                check_in_date: checkInDate,
-                check_out_date: checkOutDate,
-                license_plate: document.getElementById('licensePlate').value || '',
-                notes: document.getElementById('notes').value || '',
-                non_spostare: document.getElementById('nonSpostare').checked,
-                status: 'reserved'
+            const data={
+                spot:document.getElementById('parkingSpot').value,
+                guest_name:document.getElementById('guestName').value,
+                check_in_date:document.getElementById('checkInDate').value,
+                check_out_date:document.getElementById('checkOutDate').value,
+                license_plate:document.getElementById('licensePlate').value||'',
+                notes:document.getElementById('notes').value||'',
+                non_spostare:document.getElementById('nonSpostare').checked,
+                status:'reserved'
             };
             
-            console.log('Dati da salvare:', data);
-            
-            let result;
-            if(id){
-                console.log('Aggiornamento prenotazione ID:', id);
-                delete data.status;
-                result = await sb.from('reservations').update(data).eq('id', id);
-            }else{
-                console.log('Creazione nuova prenotazione');
-                result = await sb.from('reservations').insert([data]);
-            }
-            
-            console.log('Risultato:', result);
-            
-            if(result.error){
-                console.error('Errore salvataggio:', result.error);
-                alert('❌ Errore: '+result.error.message);
+            if(!data.spot||!data.guest_name||!data.check_in_date||!data.check_out_date){
+                alert('Compila tutti i campi!');
                 return;
             }
             
-            alert('✅ Prenotazione salvata!');
+            if(data.check_in_date>=data.check_out_date){
+                alert('Data partenza deve essere dopo arrivo!');
+                return;
+            }
+            
+            let res;
+            if(id){
+                delete data.status;
+                res=await sb.from('reservations').update(data).eq('id',id);
+            }else{
+                res=await sb.from('reservations').insert([data]);
+            }
+            
+            if(res.error){alert('Errore: '+res.error.message); return;}
+            alert('✅ Salvato!');
             closeModal();
             loadReservations();
         }
         
         async function deleteReservation(){
-            if(!confirm('Eliminare questa prenotazione?'))return;
+            if(!confirm('Eliminare?'))return;
             const id=document.getElementById('reservationId').value;
-            
-            const {error}=await sb.from('reservations').delete().eq('id',id);
-            if(error){
-                alert('Errore eliminazione');
-                return;
-            }
-            alert('Prenotazione eliminata!');
+            const res=await sb.from('reservations').delete().eq('id',id);
+            if(res.error){alert('Errore'); return;}
+            alert('🗑️ Eliminato!');
             closeModal();
             loadReservations();
         }
         
         function init(){
-            console.log('Inizializzazione app...');
-            populateParkingSpots();
+            populateSpots();
             document.getElementById('monthSelect').value=currentMonth;
             document.getElementById('yearSelect').value=currentYear;
-            
             loadReservations();
             
-            // Setup event listeners
-            document.getElementById('monthSelect').addEventListener('change', changeMonth);
-            document.getElementById('yearSelect').addEventListener('change', changeMonth);
-            document.getElementById('btnNewReservation').addEventListener('click', showAddModal);
-            document.getElementById('btnCloseModal').addEventListener('click', closeModal);
-            document.getElementById('btnCancel').addEventListener('click', closeModal);
-            document.getElementById('reservationForm').addEventListener('submit', saveReservation);
-            document.getElementById('deleteBtn').addEventListener('click', deleteReservation);
-            document.getElementById('menuEdit').addEventListener('click', editFromContext);
-            document.getElementById('menuDelete').addEventListener('click', deleteFromContext);
+            document.getElementById('monthSelect').addEventListener('change',changeMonth);
+            document.getElementById('yearSelect').addEventListener('change',changeMonth);
+            document.getElementById('btnNewReservation').addEventListener('click',()=>openNew());
+            document.getElementById('btnCloseModal').addEventListener('click',closeModal);
+            document.getElementById('btnCancel').addEventListener('click',closeModal);
+            document.getElementById('reservationForm').addEventListener('submit',saveReservation);
+            document.getElementById('deleteBtn').addEventListener('click',deleteReservation);
+            document.getElementById('menuCheckIn').addEventListener('click',()=>changeStatus('checked_in'));
+            document.getElementById('menuCheckOut').addEventListener('click',()=>changeStatus('checked_out'));
+            document.getElementById('menuReserved').addEventListener('click',()=>changeStatus('reserved'));
+            document.getElementById('menuEdit').addEventListener('click',()=>{if(contextRes)openEdit(contextRes);});
+            document.getElementById('menuDelete').addEventListener('click',async()=>{if(contextRes){const r=await sb.from('reservations').delete().eq('id',contextRes.id);if(!r.error){alert('Eliminato!');loadReservations();}}});
             
-            setupContextMenu();
-            
-            // Real-time sync
-            sb.channel('reservations_changes').on(
-                'postgres_changes',
-                {event: '*', schema: 'public', table: 'reservations'},
-                () => {
-                    console.log('Cambio rilevato, ricaricamento...');
-                    loadReservations();
-                }
-            ).subscribe();
+            sb.channel('res_changes').on('postgres_changes',{event:'*',schema:'public',table:'reservations'},()=>loadReservations()).subscribe();
         }
         
-        window.addEventListener('load', init);
+        window.addEventListener('load',init);
     </script>
 </body>
 </html>
