@@ -110,14 +110,44 @@
             color: white;
         }
         
-        .btn-success {
-            background: #10b981;
-            color: white;
+        .search-results {
+            display: none;
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 30px;
+            max-height: 300px;
+            overflow-y: auto;
         }
         
-        .btn-danger {
-            background: #ef4444;
-            color: white;
+        .search-results.active {
+            display: block;
+        }
+        
+        .search-result-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f3f4f6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .search-result-item:hover {
+            background: #e5e7eb;
+        }
+        
+        .search-result-name {
+            font-weight: 700;
+            color: #1e3a8a;
+            font-size: 14px;
+        }
+        
+        .search-result-details {
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 3px;
         }
         
         .legend {
@@ -353,6 +383,15 @@
                 #ef4444 16px
             ) !important;
             animation: blink 1s infinite;
+        }
+        
+        .search-highlight {
+            animation: searchHighlight 1s infinite;
+        }
+        
+        @keyframes searchHighlight {
+            0%, 100% { box-shadow: 0 0 10px rgba(255, 193, 7, 0.8); }
+            50% { box-shadow: 0 0 20px rgba(255, 193, 7, 1); }
         }
         
         @keyframes blink {
@@ -622,6 +661,16 @@
             margin-top: 25px;
         }
         
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
         .loading {
             text-align: center;
             padding: 50px;
@@ -655,8 +704,15 @@
                 </select>
             </div>
             
+            <div class="control-group">
+                <label>Cerca (tutti i mesi)</label>
+                <input type="text" id="searchGuest" placeholder="Cerca ospite o targa...">
+            </div>
+            
             <button class="btn btn-primary" id="btnNewReservation" style="margin-top: 20px;">➕ Nuova</button>
         </div>
+        
+        <div class="search-results" id="searchResults"></div>
         
         <div class="legend">
             <div class="legend-item"><div class="legend-color" style="background: #d1fae5;"></div><span>Libero</span></div>
@@ -750,6 +806,7 @@
         let cellReservationMap = new Map();
         let tooltipHideTimer = null;
         let contextMenuReservation = null;
+        let currentSearchReservationId = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -836,6 +893,57 @@
             return months[month];
         }
         
+        function searchGuestGlobal(){
+            const search=document.getElementById('searchGuest').value.toLowerCase().trim();
+            const resultsDiv=document.getElementById('searchResults');
+            
+            if(!search||search.length<2){
+                resultsDiv.classList.remove('active');
+                currentSearchReservationId=null;
+                return;
+            }
+            
+            const matches=reservations.filter(res=>
+                res.guest_name.toLowerCase().includes(search)||
+                (res.license_plate&&res.license_plate.toLowerCase().includes(search))
+            );
+            
+            if(matches.length===0){
+                resultsDiv.innerHTML='<div style="text-align:center;color:#6b7280;">Nessun risultato trovato</div>';
+                resultsDiv.classList.add('active');
+                return;
+            }
+            
+            let html='<div style="font-weight:700;margin-bottom:10px;color:#1e3a8a;">'+matches.length+' risultati trovati:</div>';
+            matches.forEach(res=>{
+                const checkInDate=new Date(res.check_in_date+'T00:00:00');
+                const monthName=getMonthName(checkInDate.getMonth());
+                const year=checkInDate.getFullYear();
+                
+                html+=`<div class="search-result-item" data-date="${res.check_in_date}" data-res-id="${res.id}">
+                    <div class="search-result-name">${res.guest_name}</div>
+                    <div class="search-result-details">
+                        📍 ${res.spot} • 📅 ${formatDate(res.check_in_date)} → ${formatDate(res.check_out_date)} • 📆 ${monthName} ${year}
+                        ${res.license_plate?'• 🚗 '+res.license_plate:''}
+                    </div>
+                </div>`;
+            });
+            
+            resultsDiv.innerHTML=html;
+            resultsDiv.classList.add('active');
+        }
+        
+        function goToReservation(dateStr, resId){
+            const date=new Date(dateStr+'T00:00:00');
+            currentMonth=date.getMonth();
+            currentYear=date.getFullYear();
+            document.getElementById('monthSelect').value=currentMonth;
+            document.getElementById('yearSelect').value=currentYear;
+            currentSearchReservationId=resId;
+            renderCalendar();
+            document.getElementById('searchResults').classList.remove('active');
+        }
+        
         function renderCalendar(){
             cellReservationMap.clear();
             const daysInMonth=getDaysInMonth(currentMonth,currentYear);
@@ -906,6 +1014,10 @@
                         
                         if(resList.length>1){
                             cellClass+=' overbooking';
+                        }
+                        
+                        if(currentSearchReservationId===res.id){
+                            cellClass+=' search-highlight';
                         }
                         
                         if(res.non_spostare){
@@ -1333,6 +1445,7 @@
             
             document.getElementById('monthSelect').addEventListener('change',changeMonth);
             document.getElementById('yearSelect').addEventListener('change',changeMonth);
+            document.getElementById('searchGuest').addEventListener('input',searchGuestGlobal);
             document.getElementById('btnNewReservation').addEventListener('click',showAddModal);
             document.getElementById('btnCloseModal').addEventListener('click',closeModal);
             document.getElementById('btnCancel').addEventListener('click',closeModal);
@@ -1343,6 +1456,15 @@
             document.getElementById('menuReserved').addEventListener('click',()=>changeStatus('reserved'));
             document.getElementById('menuEdit').addEventListener('click',()=>{if(contextMenuReservation)openModalWithReservation(contextMenuReservation);});
             document.getElementById('menuDelete').addEventListener('click',async()=>{if(contextMenuReservation){const r=await sb.from('reservations').delete().eq('id',contextMenuReservation.id);if(!r.error){alert('Eliminato!');loadReservations();}}});
+            
+            // Search results click
+            document.addEventListener('click',function(e){
+                if(e.target.classList.contains('search-result-item')){
+                    const dateStr=e.target.getAttribute('data-date');
+                    const resId=e.target.getAttribute('data-res-id');
+                    goToReservation(dateStr, resId);
+                }
+            });
         }
         
         window.addEventListener('load',init);
