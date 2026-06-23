@@ -34,11 +34,11 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
         }
         
-        .header h1 {
-            font-size: 26px;
-        }
+        .header h1 { font-size: 26px; }
         
         .sync-indicator {
             display: flex;
@@ -86,7 +86,8 @@
             text-transform: uppercase;
         }
         
-        .control-group select {
+        .control-group select,
+        .control-group input {
             padding: 8px 12px;
             border: 2px solid #e5e7eb;
             border-radius: 6px;
@@ -106,6 +107,16 @@
         
         .btn-primary {
             background: #3b82f6;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
             color: white;
         }
         
@@ -137,6 +148,7 @@
             overflow-x: auto;
             overflow-y: auto;
             height: calc(100vh - 250px);
+            position: relative;
         }
         
         table {
@@ -165,6 +177,7 @@
         th.posto-header {
             background: #1e3a8a;
             color: white;
+            font-size: 11px;
             min-width: 90px;
             width: 90px;
             position: sticky;
@@ -178,9 +191,13 @@
             vertical-align: middle;
             width: 35px;
             height: 35px;
+            min-height: 35px;
+            max-height: 35px;
             cursor: pointer;
+            transition: all 0.2s;
             font-size: 8px;
             position: relative;
+            overflow: visible;
         }
         
         td:first-child {
@@ -190,7 +207,13 @@
             background: white;
         }
         
-        .guest-name {
+        td:not(.occupied):not(.occupancy-cell):not(.occupancy-label):hover {
+            transform: scale(1.02);
+            z-index: 5;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .guest-name-extended {
             position: absolute;
             left: 0;
             right: 0;
@@ -201,6 +224,7 @@
             white-space: nowrap;
             text-align: center;
             pointer-events: none;
+            z-index: 1;
             padding: 0 2px;
         }
         
@@ -208,44 +232,141 @@
             background: #d1fae5;
         }
         
-        .status-reserved {
-            background: #fef9c3 !important;
+        /* STATUS COLORS */
+        .occupied.status-reserved {
+            background: #fef9c3;
             border-top: 2px solid #eab308 !important;
             border-bottom: 2px solid #eab308 !important;
+            cursor: grab !important;
         }
         
-        .status-reserved .guest-name {
+        .occupied.status-reserved .guest-name-extended {
             color: #854d0e;
         }
         
-        .status-checked_in {
-            background: #fee2e2 !important;
-            border-top: 2px solid #dc2626 !important;
-            border-bottom: 2px solid #dc2626 !important;
+        .occupied.status-reserved.reservation-start {
+            border-left: 2px solid #eab308 !important;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
         }
         
-        .status-checked_in .guest-name {
+        .occupied.status-reserved.reservation-end {
+            border-right: 2px solid #eab308 !important;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .occupied.status-reserved.reservation-single {
+            border: 2px solid #eab308 !important;
+            border-radius: 6px;
+        }
+        
+        .occupied.status-checked_in {
+            background: #fee2e2;
+            border-top: 2px solid #dc2626 !important;
+            border-bottom: 2px solid #dc2626 !important;
+            cursor: grab !important;
+        }
+        
+        .occupied.status-checked_in .guest-name-extended {
             color: #7f1d1d;
         }
         
-        .status-checked_out {
-            background: #e5e7eb !important;
-            border-top: 2px solid #6b7280 !important;
-            border-bottom: 2px solid #6b7280 !important;
+        .occupied.status-checked_in.reservation-start {
+            border-left: 2px solid #dc2626 !important;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
         }
         
-        .status-checked_out .guest-name {
+        .occupied.status-checked_in.reservation-end {
+            border-right: 2px solid #dc2626 !important;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .occupied.status-checked_in.reservation-single {
+            border: 2px solid #dc2626 !important;
+            border-radius: 6px;
+        }
+        
+        .occupied.status-checked_out {
+            background: #e5e7eb;
+            border-top: 2px solid #6b7280 !important;
+            border-bottom: 2px solid #6b7280 !important;
+            cursor: grab !important;
+        }
+        
+        .occupied.status-checked_out .guest-name-extended {
             color: #1f2937;
         }
         
-        .locked {
+        .occupied.status-checked_out.reservation-start {
+            border-left: 2px solid #6b7280 !important;
+            border-top-left-radius: 6px;
+            border-bottom-left-radius: 6px;
+        }
+        
+        .occupied.status-checked_out.reservation-end {
+            border-right: 2px solid #6b7280 !important;
+            border-top-right-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        
+        .occupied.status-checked_out.reservation-single {
+            border: 2px solid #6b7280 !important;
+            border-radius: 6px;
+        }
+        
+        .occupied:active {
+            cursor: grabbing !important;
+        }
+        
+        .occupied.locked {
             background: #e9d5ff !important;
             border-top: 2px solid #9333ea !important;
             border-bottom: 2px solid #9333ea !important;
+            cursor: not-allowed !important;
         }
         
-        .locked .guest-name {
+        .occupied.locked .guest-name-extended {
             color: #581c87;
+        }
+        
+        .occupied.locked.reservation-start {
+            border-left: 2px solid #9333ea !important;
+        }
+        
+        .occupied.locked.reservation-end {
+            border-right: 2px solid #9333ea !important;
+        }
+        
+        .occupied.locked.reservation-single {
+            border: 2px solid #9333ea !important;
+        }
+        
+        .overbooking {
+            background: repeating-linear-gradient(
+                45deg,
+                #fca5a5,
+                #fca5a5 8px,
+                #ef4444 8px,
+                #ef4444 16px
+            ) !important;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.7; }
+        }
+        
+        .dragging {
+            opacity: 0.5;
+        }
+        
+        .drag-over {
+            background: #fef3c7 !important;
+            border: 2px dashed #f59e0b !important;
         }
         
         .occupancy-row {
@@ -258,6 +379,7 @@
             background: #1e3a8a !important;
             color: white !important;
             font-weight: 700;
+            font-size: 11px;
             text-align: center;
             padding: 8px 4px;
             position: sticky;
@@ -270,6 +392,8 @@
             padding: 8px 2px;
             border: 1px solid #d1d5db;
             font-weight: 700;
+            position: sticky;
+            bottom: 0;
         }
         
         #contextMenu {
@@ -288,6 +412,9 @@
             padding: 10px 16px;
             cursor: pointer;
             font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
             transition: background 0.2s;
         }
         
@@ -305,6 +432,91 @@
             background: #e5e7eb;
             margin: 4px 0;
         }
+        
+        #globalTooltip {
+            visibility: hidden;
+            position: fixed;
+            background-color: #1f2937;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            z-index: 10000;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            min-width: 250px;
+            max-width: 350px;
+            pointer-events: auto;
+        }
+        
+        .tooltip-header {
+            font-weight: 700;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            color: #60a5fa;
+        }
+        
+        .tooltip-row {
+            margin: 6px 0;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .tooltip-label {
+            font-weight: 600;
+            color: #9ca3af;
+            min-width: 80px;
+        }
+        
+        .tooltip-value {
+            color: white;
+        }
+        
+        .tooltip-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .tooltip-btn {
+            flex: 1;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .tooltip-btn-edit {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .tooltip-btn-edit:hover {
+            background: #2563eb;
+        }
+        
+        .tooltip-btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .tooltip-btn-delete:hover {
+            background: #dc2626;
+        }
+        
+        .zone-1-8 .posto-header { background: #0ea5e9 !important; }
+        .zone-9-27 .posto-header { background: #8b5cf6 !important; }
+        .zone-electric .posto-header { background: #10b981 !important; }
+        .zone-h .posto-header { background: #ef4444 !important; }
+        .zone-navetta .posto-header { background: #06b6d4 !important; }
+        .zone-bidoni .posto-header { background: #92400e !important; }
+        .zone-esterni .posto-header { background: #059669 !important; }
         
         .modal {
             display: none;
@@ -365,14 +577,19 @@
         }
         
         .form-group input,
-        .form-group select,
-        .form-group textarea {
+        .form-group textarea,
+        .form-group select {
             width: 100%;
             padding: 10px;
             border: 2px solid #e5e7eb;
             border-radius: 6px;
             font-family: inherit;
             font-size: 14px;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
         }
         
         .checkbox-group {
@@ -388,6 +605,7 @@
         .checkbox-group input[type="checkbox"] {
             width: 20px;
             height: 20px;
+            cursor: pointer;
         }
         
         .checkbox-group label {
@@ -404,29 +622,12 @@
             margin-top: 25px;
         }
         
-        .btn-danger {
-            background: #ef4444;
-            color: white;
-        }
-        
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-        
         .loading {
             text-align: center;
             padding: 50px;
+            font-size: 18px;
             color: #6b7280;
         }
-        
-        .zone-1-8 .posto-header { background: #0ea5e9 !important; }
-        .zone-9-27 .posto-header { background: #8b5cf6 !important; }
-        .zone-electric .posto-header { background: #10b981 !important; }
-        .zone-h .posto-header { background: #ef4444 !important; }
-        .zone-navetta .posto-header { background: #06b6d4 !important; }
-        .zone-bidoni .posto-header { background: #92400e !important; }
-        .zone-esterni .posto-header { background: #059669 !important; }
     </style>
 </head>
 <body>
@@ -442,20 +643,7 @@
         <div class="controls">
             <div class="control-group">
                 <label>Mese</label>
-                <select id="monthSelect">
-                    <option value="0">Gennaio</option>
-                    <option value="1">Febbraio</option>
-                    <option value="2">Marzo</option>
-                    <option value="3">Aprile</option>
-                    <option value="4">Maggio</option>
-                    <option value="5">Giugno</option>
-                    <option value="6">Luglio</option>
-                    <option value="7">Agosto</option>
-                    <option value="8">Settembre</option>
-                    <option value="9">Ottobre</option>
-                    <option value="10">Novembre</option>
-                    <option value="11">Dicembre</option>
-                </select>
+                <select id="monthSelect"></select>
             </div>
             
             <div class="control-group">
@@ -545,6 +733,8 @@
         </div>
     </div>
     
+    <div id="globalTooltip"></div>
+    
     <script>
         const SUPABASE_URL = 'https://nsettzmyswlfrnzwvpsq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zZXR0em15c3dsZnJuend2cHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMzA0NzIsImV4cCI6MjA4MTYwNjQ3Mn0.OA2B7-6PVOi8XSaM5_r0Dxv_wpbG5I_ImTxaR0sgUoY';
@@ -556,8 +746,10 @@
         let reservations = [];
         let currentMonth = new Date().getMonth();
         let currentYear = new Date().getFullYear();
-        let cellMap = new Map();
-        let contextRes = null;
+        let draggedReservation = null;
+        let cellReservationMap = new Map();
+        let tooltipHideTimer = null;
+        let contextMenuReservation = null;
         
         function getZoneClass(spot) {
             const num = parseInt(spot.replace('PK ',''));
@@ -571,39 +763,44 @@
             return'';
         }
         
+        function getSpotIcon(spot){
+            const num=parseInt(spot.replace('PK ',''));
+            return(num===16||num===17)?' ⚡':'';
+        }
+        
+        function getValidParkingSpotsForStats(){
+            return parkingSpots.filter(spot=>{
+                if(spot==='BIDONI')return false;
+                if(spot==='PK ESTERNI')return false;
+                if(spot==='PK H')return false;
+                if(spot==='NAVETTA')return false;
+                if(spot==='PK 16')return false;
+                if(spot==='PK 17')return false;
+                return true;
+            });
+        }
+        
         async function loadReservations(){
-            const {data, error} = await sb.from('reservations').select('*');
-            if(error){alert('Errore caricamento'); return;}
-            reservations = data || [];
+            const{data,error}=await sb.from('reservations').select('*');
+            if(error){
+                console.error('Errore caricamento:',error);
+                alert('Errore caricamento');
+                return;
+            }
+            reservations=data||[];
             document.getElementById('loading').style.display='none';
             document.getElementById('parkingTable').style.display='table';
             renderCalendar();
         }
         
-        function populateSpots(){
-            const sel=document.getElementById('parkingSpot');
-            sel.innerHTML='<option value="">Seleziona...</option>';
-            parkingSpots.forEach(s=>{
-                const opt=document.createElement('option');
-                opt.value=s;
-                opt.textContent=s;
-                sel.appendChild(opt);
-            });
-        }
-        
-        function getDaysInMonth(m,y){
-            return new Date(y,m+1,0).getDate();
-        }
-        
-        function getDayInitials(d){
-            const days=['DOM','LUN','MAR','MER','GIO','VEN','SAB'];
-            return days[d.getDay()];
-        }
-        
-        function getReservationsForDate(spot,dateStr){
-            return reservations.filter(r=>{
-                const spots=r.spot.split(',').map(s=>s.trim());
-                return spots.includes(spot)&&dateStr>=r.check_in_date&&dateStr<r.check_out_date;
+        function populateParkingSpots(){
+            const select=document.getElementById('parkingSpot');
+            select.innerHTML='<option value="">Seleziona...</option>';
+            parkingSpots.forEach(spot=>{
+                const option=document.createElement('option');
+                option.value=spot;
+                option.textContent=spot+getSpotIcon(spot);
+                select.appendChild(option);
             });
         }
         
@@ -613,112 +810,246 @@
             renderCalendar();
         }
         
-        function getValidSpots(){
-            return parkingSpots.filter(s=> !['BIDONI','PK ESTERNI','PK H','NAVETTA','PK 16','PK 17'].includes(s));
+        function getDaysInMonth(month,year){
+            return new Date(year,month+1,0).getDate();
+        }
+        
+        function getDayInitials(date){
+            const days=['DOM','LUN','MAR','MER','GIO','VEN','SAB'];
+            return days[date.getDay()];
+        }
+        
+        function getReservationsForDate(spot,dateStr){
+            return reservations.filter(res=>{
+                const spots=res.spot.split(',').map(s=>s.trim());
+                return spots.includes(spot)&&dateStr>=res.check_in_date&&dateStr<res.check_out_date;
+            });
+        }
+        
+        function formatDate(dateStr){
+            const date=new Date(dateStr+'T00:00:00');
+            return date.toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit',year:'numeric'});
+        }
+        
+        function getMonthName(month){
+            const months=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+            return months[month];
         }
         
         function renderCalendar(){
-            cellMap.clear();
-            const days=getDaysInMonth(currentMonth,currentYear);
-            const head=document.getElementById('tableHead');
-            const body=document.getElementById('tableBody');
-            
-            let hhtml='<tr><th class="posto-header">Posto</th>';
-            for(let d=1;d<=days;d++){
-                const dt=new Date(currentYear,currentMonth,d);
-                hhtml+='<th>'+d+'<br><small>'+getDayInitials(dt)+'</small></th>';
+            cellReservationMap.clear();
+            const daysInMonth=getDaysInMonth(currentMonth,currentYear);
+            const tableHead=document.getElementById('tableHead');
+            const tableBody=document.getElementById('tableBody');
+            let headerHTML='<tr><th class="posto-header">Posto</th>';
+            for(let day=1;day<=daysInMonth;day++){
+                const date=new Date(currentYear,currentMonth,day);
+                const dayInitials=getDayInitials(date);
+                headerHTML+='<th>'+day+'<br><small style="font-size:8px;">'+dayInitials+'</small></th>';
             }
-            hhtml+='</tr>';
-            head.innerHTML=hhtml;
+            headerHTML+='</tr>';
+            tableHead.innerHTML=headerHTML;
             
-            let bhtml='';
+            let bodyHTML='';
+            
             parkingSpots.forEach(spot=>{
-                const zone=getZoneClass(spot);
-                bhtml+='<tr class="'+zone+'"><td class="posto-header">'+spot+'</td>';
+                const zoneClass=getZoneClass(spot);
+                const spotIcon=getSpotIcon(spot);
+                bodyHTML+='<tr class="'+zoneClass+'"><td class="posto-header">'+spot+spotIcon+'</td>';
                 
-                for(let d=1;d<=days;d++){
-                    const y=currentYear;
-                    const m=String(currentMonth+1).padStart(2,'0');
-                    const ds=String(d).padStart(2,'0');
-                    const dateStr=y+'-'+m+'-'+ds;
+                for(let day=1;day<=daysInMonth;day++){
+                    const year=currentYear;
+                    const month=String(currentMonth+1).padStart(2,'0');
+                    const dayStr=String(day).padStart(2,'0');
+                    const dateStr=`${year}-${month}-${dayStr}`;
                     
                     const resList=getReservationsForDate(spot,dateStr);
-                    const key=spot+'-'+dateStr;
+                    const cellKey=spot+'-'+dateStr;
                     
-                    let cls='free';
-                    let html='';
+                    let cellClass='free';
+                    let cellAttrs='';
+                    let cellContent='';
                     
                     if(resList.length>0){
                         const res=resList[0];
-                        cellMap.set(key,res);
+                        cellReservationMap.set(cellKey,res);
                         
                         const allSpots=res.spot.split(',').map(s=>s.trim());
-                        const isFirst=(spot===allSpots[0]);
-                        const isStart=(res.check_in_date===dateStr);
+                        const firstSpot=allSpots[0];
+                        const isFirstSpot=(spot===firstSpot);
                         
-                        if(isFirst&&isStart){
-                            html='<div class="guest-name">'+res.guest_name+'</div>';
+                        const isStart=(res.check_in_date===dateStr);
+                        const checkOutDate=new Date(res.check_out_date+'T00:00:00');
+                        const dayBeforeCheckout=new Date(checkOutDate);
+                        dayBeforeCheckout.setDate(dayBeforeCheckout.getDate()-1);
+                        const yearEnd=dayBeforeCheckout.getFullYear();
+                        const monthEnd=String(dayBeforeCheckout.getMonth()+1).padStart(2,'0');
+                        const dayEnd=String(dayBeforeCheckout.getDate()).padStart(2,'0');
+                        const isEnd=(`${yearEnd}-${monthEnd}-${dayEnd}`===dateStr);
+                        
+                        if(isStart&&isEnd){
+                            cellClass='occupied reservation-single';
+                        }else if(isStart){
+                            cellClass='occupied reservation-start';
+                        }else if(isEnd){
+                            cellClass='occupied reservation-end';
+                        }else{
+                            cellClass='occupied';
+                        }
+                        
+                        if(isFirstSpot&&isStart){
+                            cellContent='<div class="guest-name-extended">'+res.guest_name+'</div>';
                         }
                         
                         const status=res.status||'reserved';
-                        cls='status-'+status;
-                        if(res.non_spostare)cls='locked';
+                        cellClass+=' status-'+status;
+                        
+                        if(resList.length>1){
+                            cellClass+=' overbooking';
+                        }
+                        
+                        if(res.non_spostare){
+                            cellClass+=' locked';
+                            cellAttrs='data-res-id="'+res.id+'" data-cell-key="'+cellKey+'"';
+                        }else{
+                            cellAttrs='draggable="true" data-res-id="'+res.id+'" data-cell-key="'+cellKey+'"';
+                        }
+                    }else{
+                        cellAttrs='data-date="'+dateStr+'" data-spot="'+spot+'"';
                     }
                     
-                    bhtml+='<td class="'+cls+'" data-key="'+key+'" data-date="'+dateStr+'" data-spot="'+spot+'">'+html+'</td>';
+                    bodyHTML+='<td class="'+cellClass+'" '+cellAttrs+' data-date="'+dateStr+'" data-spot="'+spot+'">'+cellContent+'</td>';
                 }
-                bhtml+='</tr>';
+                bodyHTML+='</tr>';
             });
             
-            const validSpots=getValidSpots();
-            const total=validSpots.length;
-            bhtml+='<tr class="occupancy-row"><td class="occupancy-label">% Occupazione</td>';
+            const validSpots=getValidParkingSpotsForStats();
+            const totalValidSpots=validSpots.length;
             
-            for(let d=1;d<=days;d++){
-                const y=currentYear;
-                const m=String(currentMonth+1).padStart(2,'0');
-                const ds=String(d).padStart(2,'0');
-                const dateStr=y+'-'+m+'-'+ds;
-                
-                let occ=0;
-                validSpots.forEach(s=>{
-                    if(getReservationsForDate(s,dateStr).length>0)occ++;
-                });
-                
-                const pct=Math.round((occ/total)*100);
-                let bg='#d1fae5';
-                if(pct>=80)bg='#fca5a5';
-                else if(pct>=60)bg='#fed7aa';
-                else if(pct>=40)bg='#fef08a';
-                
-                bhtml+='<td class="occupancy-cell" style="background:'+bg+'">'+pct+'%</td>';
-            }
-            bhtml+='</tr>';
+            bodyHTML+='<tr class="occupancy-row"><td class="occupancy-label">% Occupazione</td>';
             
-            body.innerHTML=bhtml;
-            setupEvents();
-        }
-        
-        function setupEvents(){
-            document.querySelectorAll('td').forEach(td=>{
-                if(td.classList.contains('occupancy-cell')||td.classList.contains('occupancy-label'))return;
+            for(let day=1;day<=daysInMonth;day++){
+                const year=currentYear;
+                const month=String(currentMonth+1).padStart(2,'0');
+                const dayStr=String(day).padStart(2,'0');
+                const dateStr=`${year}-${month}-${dayStr}`;
                 
-                td.addEventListener('dblclick',function(){
-                    const key=td.getAttribute('data-key');
-                    if(key){
-                        const res=cellMap.get(key);
-                        if(res)openEdit(res);
-                    }else{
-                        openNew(td.getAttribute('data-spot'),td.getAttribute('data-date'));
+                let occupiedCount=0;
+                validSpots.forEach(spot=>{
+                    const resList=getReservationsForDate(spot,dateStr);
+                    if(resList.length>0){
+                        occupiedCount++;
                     }
                 });
                 
-                td.addEventListener('contextmenu',function(e){
+                const percentage=Math.round((occupiedCount/totalValidSpots)*100);
+                let bgColor='#d1fae5';
+                if(percentage>=80)bgColor='#fca5a5';
+                else if(percentage>=60)bgColor='#fed7aa';
+                else if(percentage>=40)bgColor='#fef08a';
+                
+                bodyHTML+='<td class="occupancy-cell" style="background:'+bgColor+';font-weight:700;font-size:11px;">'+percentage+'%</td>';
+            }
+            bodyHTML+='</tr>';
+            
+            tableBody.innerHTML=bodyHTML;
+            
+            setupCellEvents();
+        }
+        
+        function setupCellEvents(){
+            document.querySelectorAll('td:not(.occupancy-cell):not(.occupancy-label)').forEach(cell=>{
+                cell.addEventListener('mouseenter',function(e){
+                    if(cell.classList.contains('occupied')){
+                        const cellKey=cell.getAttribute('data-cell-key');
+                        showTooltip(e,cellKey);
+                    }
+                });
+                
+                cell.addEventListener('mouseleave',function(){
+                    scheduleHideTooltip();
+                });
+                
+                cell.addEventListener('dblclick',function(){
+                    const cellKey=cell.getAttribute('data-cell-key');
+                    if(cellKey){
+                        const res=cellReservationMap.get(cellKey);
+                        if(res){
+                            hideTooltip();
+                            openModalWithReservation(res);
+                        }
+                    }else{
+                        const spot=cell.getAttribute('data-spot');
+                        const dateStr=cell.getAttribute('data-date');
+                        if(spot&&dateStr){
+                            openModal(spot,dateStr);
+                        }
+                    }
+                });
+                
+                cell.addEventListener('dragstart',function(e){
+                    const cellKey=cell.getAttribute('data-cell-key');
+                    const res=cellReservationMap.get(cellKey);
+                    if(!res||res.non_spostare){
+                        e.preventDefault();
+                        return;
+                    }
+                    draggedReservation=res;
+                    cell.classList.add('dragging');
+                    hideTooltip();
+                });
+                
+                cell.addEventListener('dragend',function(){
+                    cell.classList.remove('dragging');
+                    draggedReservation=null;
+                    document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
+                });
+                
+                cell.addEventListener('dragover',function(e){
                     e.preventDefault();
-                    const key=td.getAttribute('data-key');
-                    const res=cellMap.get(key);
+                });
+                
+                cell.addEventListener('dragenter',function(){
+                    if(draggedReservation){
+                        cell.classList.add('drag-over');
+                    }
+                });
+                
+                cell.addEventListener('dragleave',function(){
+                    cell.classList.remove('drag-over');
+                });
+                
+                cell.addEventListener('drop',async function(e){
+                    e.preventDefault();
+                    cell.classList.remove('drag-over');
+                    
+                    if(!draggedReservation)return;
+                    
+                    const newSpot=cell.getAttribute('data-spot');
+                    const dateStr=cell.getAttribute('data-date');
+                    
+                    const existingRes=getReservationsForDate(newSpot,dateStr);
+                    if(existingRes.length>0&&!confirm('⚠️ Attenzione: c\'è già una prenotazione su questo posto. Vuoi creare un overbooking?')){
+                        return;
+                    }
+                    
+                    const{error}=await sb.from('reservations').update({spot:newSpot}).eq('id',draggedReservation.id);
+                    
+                    if(error){
+                        alert('❌ Errore nello spostamento');
+                        return;
+                    }
+                    
+                    alert('✅ Prenotazione spostata!');
+                    loadReservations();
+                });
+                
+                cell.addEventListener('contextmenu',function(e){
+                    const cellKey=cell.getAttribute('data-cell-key');
+                    const res=cellReservationMap.get(cellKey);
                     if(res){
-                        contextRes=res;
+                        e.preventDefault();
+                        contextMenuReservation=res;
                         const menu=document.getElementById('contextMenu');
                         menu.style.display='block';
                         menu.style.left=e.clientX+'px';
@@ -728,15 +1059,134 @@
             });
         }
         
-        document.addEventListener('click',()=>{
-            document.getElementById('contextMenu').style.display='none';
-        });
+        function showTooltip(event,cellKey){
+            const res=cellReservationMap.get(cellKey);
+            if(!res)return;
+            
+            if(tooltipHideTimer){
+                clearTimeout(tooltipHideTimer);
+                tooltipHideTimer=null;
+            }
+            
+            const tooltip=document.getElementById('globalTooltip');
+            
+            let html='<div class="tooltip-header">'+res.guest_name+'</div>';
+            html+='<div class="tooltip-row"><span class="tooltip-label">Posto:</span><span class="tooltip-value">'+res.spot+'</span></div>';
+            html+='<div class="tooltip-row"><span class="tooltip-label">Arrivo:</span><span class="tooltip-value">'+formatDate(res.check_in_date)+'</span></div>';
+            html+='<div class="tooltip-row"><span class="tooltip-label">Partenza:</span><span class="tooltip-value">'+formatDate(res.check_out_date)+'</span></div>';
+            if(res.license_plate){
+                html+='<div class="tooltip-row"><span class="tooltip-label">Targa:</span><span class="tooltip-value">'+res.license_plate+'</span></div>';
+            }
+            if(res.notes){
+                html+='<div class="tooltip-row"><span class="tooltip-label">Note:</span><span class="tooltip-value">'+res.notes+'</span></div>';
+            }
+            if(res.non_spostare){
+                html+='<div class="tooltip-row"><span class="tooltip-label">Tipo:</span><span class="tooltip-value">🔒 Non spostabile</span></div>';
+            }
+            html+='<div class="tooltip-actions">';
+            html+='<button class="tooltip-btn tooltip-btn-edit" data-cell-key="'+cellKey+'">✏️ Modifica</button>';
+            html+='<button class="tooltip-btn tooltip-btn-delete" data-cell-key="'+cellKey+'">🗑️ Elimina</button>';
+            html+='</div>';
+            
+            tooltip.innerHTML=html;
+            tooltip.style.visibility='visible';
+            positionTooltip(event.currentTarget);
+        }
+        
+        function scheduleHideTooltip(){
+            tooltipHideTimer=setTimeout(function(){
+                hideTooltip();
+            },300);
+        }
+        
+        function cancelHideTooltip(){
+            if(tooltipHideTimer){
+                clearTimeout(tooltipHideTimer);
+                tooltipHideTimer=null;
+            }
+        }
+        
+        function positionTooltip(cell){
+            const tooltip=document.getElementById('globalTooltip');
+            const rect=cell.getBoundingClientRect();
+            
+            const tooltipHeight=tooltip.offsetHeight;
+            let top=rect.top-tooltipHeight-10;
+            let left=rect.left+(rect.width/2)-(tooltip.offsetWidth/2);
+            
+            if(top<0){
+                top=rect.bottom+10;
+            }
+            
+            if(left<10){
+                left=10;
+            }
+            if(left+tooltip.offsetWidth>window.innerWidth-10){
+                left=window.innerWidth-tooltip.offsetWidth-10;
+            }
+            
+            tooltip.style.left=left+'px';
+            tooltip.style.top=top+'px';
+        }
+        
+        function hideTooltip(){
+            document.getElementById('globalTooltip').style.visibility='hidden';
+            if(tooltipHideTimer){
+                clearTimeout(tooltipHideTimer);
+                tooltipHideTimer=null;
+            }
+        }
+        
+        function setupTooltipEvents(){
+            const tooltip=document.getElementById('globalTooltip');
+            tooltip.addEventListener('mouseenter',function(){
+                cancelHideTooltip();
+            });
+            tooltip.addEventListener('mouseleave',function(){
+                hideTooltip();
+            });
+            tooltip.addEventListener('click',function(e){
+                const target=e.target;
+                if(target.classList.contains('tooltip-btn-edit')){
+                    const cellKey=target.getAttribute('data-cell-key');
+                    const res=cellReservationMap.get(cellKey);
+                    if(res){
+                        hideTooltip();
+                        openModalWithReservation(res);
+                    }
+                }else if(target.classList.contains('tooltip-btn-delete')){
+                    const cellKey=target.getAttribute('data-cell-key');
+                    const res=cellReservationMap.get(cellKey);
+                    if(res){
+                        hideTooltip();
+                        deleteReservation(res);
+                    }
+                }
+            });
+        }
+        
+        async function deleteReservation(res){
+            if(!confirm('⚠️ Eliminare la prenotazione di '+res.guest_name+'?'))return;
+            const{error}=await sb.from('reservations').delete().eq('id',res.id);
+            if(error){
+                alert('❌ Errore');
+                return;
+            }
+            alert('🗑️ Eliminato!');
+            loadReservations();
+        }
+        
+        function setupContextMenu(){
+            document.addEventListener('click',function(){
+                document.getElementById('contextMenu').style.display='none';
+            });
+        }
         
         async function changeStatus(newStatus){
             document.getElementById('contextMenu').style.display='none';
-            if(!contextRes)return;
+            if(!contextMenuReservation)return;
             
-            const {error}=await sb.from('reservations').update({status:newStatus}).eq('id',contextRes.id);
+            const{error}=await sb.from('reservations').update({status:newStatus}).eq('id',contextMenuReservation.id);
             
             if(error){
                 alert('❌ Errore');
@@ -744,21 +1194,21 @@
             }
             
             const msg={
-                'reserved':'🔄 Stato: Prenotato',
-                'checked_in':'✅ Stato: Check-in',
-                'checked_out':'🏁 Stato: Check-out'
+                'reserved':'🔄 Ripristinato a Prenotato',
+                'checked_in':'✅ Check-in!',
+                'checked_out':'🏁 Check-out!'
             };
             
             alert(msg[newStatus]||'✅ Aggiornato');
             loadReservations();
         }
         
-        function openNew(spot,date){
+        function showAddModal(){
             document.getElementById('modalTitle').textContent='Nuova Prenotazione';
             document.getElementById('reservationId').value='';
             document.getElementById('guestName').value='';
-            document.getElementById('parkingSpot').value=spot||'';
-            document.getElementById('checkInDate').value=date||'';
+            document.getElementById('parkingSpot').value='';
+            document.getElementById('checkInDate').value='';
             document.getElementById('checkOutDate').value='';
             document.getElementById('licensePlate').value='';
             document.getElementById('notes').value='';
@@ -767,7 +1217,7 @@
             document.getElementById('reservationModal').classList.add('active');
         }
         
-        function openEdit(res){
+        function openModalWithReservation(res){
             document.getElementById('modalTitle').textContent='Modifica Prenotazione';
             document.getElementById('reservationId').value=res.id;
             document.getElementById('guestName').value=res.guest_name;
@@ -781,79 +1231,118 @@
             document.getElementById('reservationModal').classList.add('active');
         }
         
+        function openModal(spot,dateStr){
+            const resList=getReservationsForDate(spot,dateStr);
+            if(resList.length>0){
+                openModalWithReservation(resList[0]);
+            }else{
+                document.getElementById('modalTitle').textContent='Nuova Prenotazione';
+                document.getElementById('reservationId').value='';
+                document.getElementById('guestName').value='';
+                document.getElementById('parkingSpot').value=spot;
+                document.getElementById('checkInDate').value=dateStr;
+                document.getElementById('checkOutDate').value='';
+                document.getElementById('licensePlate').value='';
+                document.getElementById('notes').value='';
+                document.getElementById('nonSpostare').checked=false;
+                document.getElementById('deleteBtn').style.display='none';
+                document.getElementById('reservationModal').classList.add('active');
+            }
+        }
+        
         function closeModal(){
             document.getElementById('reservationModal').classList.remove('active');
         }
         
-        async function saveReservation(e){
-            e.preventDefault();
-            
+        async function saveReservation(event){
+            event.preventDefault();
             const id=document.getElementById('reservationId').value;
+            
+            const spot=document.getElementById('parkingSpot').value;
+            
+            if(!spot){
+                alert('⚠️ Seleziona un posto!');
+                return;
+            }
+            
             const data={
-                spot:document.getElementById('parkingSpot').value,
+                spot:spot,
                 guest_name:document.getElementById('guestName').value,
                 check_in_date:document.getElementById('checkInDate').value,
                 check_out_date:document.getElementById('checkOutDate').value,
-                license_plate:document.getElementById('licensePlate').value||'',
-                notes:document.getElementById('notes').value||'',
+                license_plate:document.getElementById('licensePlate').value,
+                notes:document.getElementById('notes').value,
                 non_spostare:document.getElementById('nonSpostare').checked,
                 status:'reserved'
             };
             
-            if(!data.spot||!data.guest_name||!data.check_in_date||!data.check_out_date){
-                alert('Compila tutti i campi!');
-                return;
-            }
-            
             if(data.check_in_date>=data.check_out_date){
-                alert('Data partenza deve essere dopo arrivo!');
+                alert('⚠️ La data di partenza deve essere successiva a quella di arrivo!');
                 return;
             }
             
-            let res;
+            let result;
             if(id){
                 delete data.status;
-                res=await sb.from('reservations').update(data).eq('id',id);
+                result=await sb.from('reservations').update(data).eq('id',id);
             }else{
-                res=await sb.from('reservations').insert([data]);
+                result=await sb.from('reservations').insert([data]);
             }
             
-            if(res.error){alert('Errore: '+res.error.message); return;}
-            alert('✅ Salvato!');
+            if(result.error){
+                alert('❌ Errore: '+result.error.message);
+                return;
+            }
+            
             closeModal();
+            alert('✅ Salvato!');
             loadReservations();
         }
         
-        async function deleteReservation(){
-            if(!confirm('Eliminare?'))return;
+        async function deleteReservationFromModal(){
+            if(!confirm('⚠️ Eliminare?'))return;
             const id=document.getElementById('reservationId').value;
-            const res=await sb.from('reservations').delete().eq('id',id);
-            if(res.error){alert('Errore'); return;}
-            alert('🗑️ Eliminato!');
+            const{error}=await sb.from('reservations').delete().eq('id',id);
+            if(error){
+                alert('❌ Errore');
+                return;
+            }
             closeModal();
+            alert('🗑️ Eliminato!');
             loadReservations();
         }
         
         function init(){
-            populateSpots();
+            // Setup mesi
+            const monthSelect = document.getElementById('monthSelect');
+            const months=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
+            months.forEach((m, i) => {
+                const opt = document.createElement('option');
+                opt.value = i;
+                opt.textContent = m;
+                monthSelect.appendChild(opt);
+            });
+            
+            populateParkingSpots();
             document.getElementById('monthSelect').value=currentMonth;
             document.getElementById('yearSelect').value=currentYear;
+            setupTooltipEvents();
+            setupContextMenu();
             loadReservations();
+            sb.channel('reservations_changes').on('postgres_changes',{event:'*',schema:'public',table:'reservations'},()=>{loadReservations();}).subscribe();
             
             document.getElementById('monthSelect').addEventListener('change',changeMonth);
             document.getElementById('yearSelect').addEventListener('change',changeMonth);
-            document.getElementById('btnNewReservation').addEventListener('click',()=>openNew());
+            document.getElementById('btnNewReservation').addEventListener('click',showAddModal);
             document.getElementById('btnCloseModal').addEventListener('click',closeModal);
             document.getElementById('btnCancel').addEventListener('click',closeModal);
             document.getElementById('reservationForm').addEventListener('submit',saveReservation);
-            document.getElementById('deleteBtn').addEventListener('click',deleteReservation);
+            document.getElementById('deleteBtn').addEventListener('click',deleteReservationFromModal);
             document.getElementById('menuCheckIn').addEventListener('click',()=>changeStatus('checked_in'));
             document.getElementById('menuCheckOut').addEventListener('click',()=>changeStatus('checked_out'));
             document.getElementById('menuReserved').addEventListener('click',()=>changeStatus('reserved'));
-            document.getElementById('menuEdit').addEventListener('click',()=>{if(contextRes)openEdit(contextRes);});
-            document.getElementById('menuDelete').addEventListener('click',async()=>{if(contextRes){const r=await sb.from('reservations').delete().eq('id',contextRes.id);if(!r.error){alert('Eliminato!');loadReservations();}}});
-            
-            sb.channel('res_changes').on('postgres_changes',{event:'*',schema:'public',table:'reservations'},()=>loadReservations()).subscribe();
+            document.getElementById('menuEdit').addEventListener('click',()=>{if(contextMenuReservation)openModalWithReservation(contextMenuReservation);});
+            document.getElementById('menuDelete').addEventListener('click',async()=>{if(contextMenuReservation){const r=await sb.from('reservations').delete().eq('id',contextMenuReservation.id);if(!r.error){alert('Eliminato!');loadReservations();}}});
         }
         
         window.addEventListener('load',init);
