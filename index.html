@@ -106,6 +106,10 @@
         .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding: 12px; background: #f3f4f6; border-radius: 6px; }
         .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
         .checkbox-group label { margin: 0; cursor: pointer; font-weight: 600; color: #374151; }
+        .parking-spots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; max-height: 200px; overflow-y: auto; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; }
+        .spot-checkbox { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500; }
+        .spot-checkbox input { width: auto; }
+        .spot-checkbox.disabled { opacity: 0.4; pointer-events: none; }
         .modal-actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 25px; }
         .loading { text-align: center; padding: 50px; font-size: 18px; color: #6b7280; }
     </style>
@@ -177,9 +181,17 @@
                     <label>Ospite *</label>
                     <input type="text" id="guestName" required>
                 </div>
-                <div class="form-group">
+                <div class="checkbox-group">
+                    <input type="checkbox" id="isBus">
+                    <label for="isBus">🚌 Bus/Pullman (seleziona più posti)</label>
+                </div>
+                <div class="form-group" id="singleSpotGroup">
                     <label>Posto *</label>
                     <select id="parkingSpot" required><option value="">Seleziona...</option></select>
+                </div>
+                <div class="form-group" id="multiSpotGroup" style="display:none;">
+                    <label>Posti (seleziona più posti per il bus) *</label>
+                    <div class="parking-spots-grid" id="parkingSpotsGrid"></div>
                 </div>
                 <div class="form-group">
                     <label>Arrivo *</label>
@@ -216,7 +228,7 @@
 
     <script>
         const SUPABASE_URL = 'https://nsettzmyswlfrnzwvpsq.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zZXR0em15c3dsZnJuend2cHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMzA0NzIsImV4cCI6MjA4MTYwNjQ3Mn0.OA2B7-6PVOi8XSaM5_r0Dxv_wpbG5I_ImTxaR0sgUoY';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ 9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zZXR0em15c3dsZnJuend2cHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMzA0NzIsImV4cCI6MjA4MTYwNjQ3Mn0.OA2B7-6PVOi8XSaM5_r0Dxv_wpbG5I_ImTxaR0sgUoY';
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const parkingSpots = ['PK 1','PK 2','PK 3','PK 4','PK 5','PK 6','PK 7','PK 8','PK 9','PK 10','PK 11','PK 12','PK 13','PK 14','PK 15','PK 16','PK 17','PK 18','PK 19','PK 20','PK 21','PK 22','PK 23','PK 24','PK 25','PK 26','PK 27','PK H','NAVETTA','PK ESTERNI','BIDONI'];
@@ -287,6 +299,23 @@
                 o.value=spot; o.textContent=spot+getSpotIcon(spot);
                 select.appendChild(o);
             });
+        }
+        function populateParkingSpotsGrid(){
+            const grid=document.getElementById('parkingSpotsGrid');
+            grid.innerHTML='';
+            parkingSpots.forEach(spot=>{
+                const label=document.createElement('label');
+                label.className='spot-checkbox';
+                label.innerHTML='<input type="checkbox" value="'+spot+'" class="spot-check"> '+spot+getSpotIcon(spot);
+                grid.appendChild(label);
+            });
+        }
+        function toggleBusMode(){
+            const isBus=document.getElementById('isBus').checked;
+            document.getElementById('singleSpotGroup').style.display=isBus?'none':'block';
+            document.getElementById('multiSpotGroup').style.display=isBus?'block':'none';
+            if(isBus){ document.getElementById('parkingSpot').removeAttribute('required'); }
+            else { document.getElementById('parkingSpot').setAttribute('required',''); }
         }
         function changeMonth(){
             currentMonth=parseInt(document.getElementById('monthSelect').value);
@@ -406,232 +435,4 @@
                 const ds=String(day).padStart(2,'0');
                 const dateStr=currentYear+'-'+m+'-'+ds;
                 let occ=0;
-                validSpots.forEach(s=>{ if(getReservationsForDate(s,dateStr).length>0)occ++; });
-                const pct=Math.round((occ/total)*100);
-                let bg='#d1fae5';
-                if(pct>=80)bg='#fca5a5'; else if(pct>=60)bg='#fed7aa'; else if(pct>=40)bg='#fef08a';
-                bodyHTML+='<td class="occupancy-cell" style="background:'+bg+';font-size:11px;">'+pct+'%</td>';
-            }
-            bodyHTML+='</tr>';
-            tableBody.innerHTML=bodyHTML;
-            setupCellEvents();
-        }
-
-        function setupCellEvents(){
-            document.querySelectorAll('td:not(.occupancy-cell):not(.occupancy-label)').forEach(cell=>{
-                cell.addEventListener('mouseenter',function(e){
-                    if(cell.classList.contains('occupied')){
-                        showTooltip(e, cell.getAttribute('data-cell-key'));
-                    }
-                });
-                cell.addEventListener('mouseleave',scheduleHideTooltip);
-                cell.addEventListener('dblclick',function(){
-                    const key=cell.getAttribute('data-cell-key');
-                    if(key){ const res=cellReservationMap.get(key); if(res){ hideTooltip(); openModalWithReservation(res); } }
-                    else { openModal(cell.getAttribute('data-spot'), cell.getAttribute('data-date')); }
-                });
-                cell.addEventListener('dragstart',function(e){
-                    const res=cellReservationMap.get(cell.getAttribute('data-cell-key'));
-                    if(!res||res.non_spostare){ e.preventDefault(); return; }
-                    const spots=res.spot.split(',').map(s=>s.trim());
-                    if(spots.length>1){ e.preventDefault(); alert('⚠️ Non puoi trascinare prenotazioni con più posti'); return; }
-                    draggedReservation=res; cell.classList.add('dragging'); hideTooltip();
-                });
-                cell.addEventListener('dragend',function(){
-                    cell.classList.remove('dragging'); draggedReservation=null;
-                    document.querySelectorAll('.drag-over').forEach(el=>el.classList.remove('drag-over'));
-                });
-                cell.addEventListener('dragover',function(e){ e.preventDefault(); });
-                cell.addEventListener('dragenter',function(){ if(draggedReservation)cell.classList.add('drag-over'); });
-                cell.addEventListener('dragleave',function(){ cell.classList.remove('drag-over'); });
-                cell.addEventListener('drop',async function(e){
-                    e.preventDefault(); cell.classList.remove('drag-over');
-                    if(!draggedReservation)return;
-                    const newSpot=cell.getAttribute('data-spot');
-                    const dateStr=cell.getAttribute('data-date');
-                    const existing=getReservationsForDate(newSpot,dateStr);
-                    if(existing.length>0 && !confirm('⚠️ C\'è già una prenotazione su questo posto. Creare un overbooking?')) return;
-                    const {error}=await sb.from('reservations').update({spot:newSpot}).eq('id',draggedReservation.id);
-                    if(error){ alert('❌ Errore nello spostamento'); return; }
-                    loadReservations();
-                });
-                cell.addEventListener('contextmenu',function(e){
-                    const res=cellReservationMap.get(cell.getAttribute('data-cell-key'));
-                    if(res){
-                        e.preventDefault();
-                        contextMenuReservation=res;
-                        const menu=document.getElementById('contextMenu');
-                        menu.style.display='block';
-                        let left=e.clientX+5, top=e.clientY+5;
-                        if(left+230>window.innerWidth)left=e.clientX-230;
-                        if(top+260>window.innerHeight)top=e.clientY-260;
-                        menu.style.left=left+'px'; menu.style.top=top+'px';
-                    }
-                });
-            });
-        }
-
-        function showTooltip(event,cellKey){
-            const res=cellReservationMap.get(cellKey);
-            if(!res)return;
-            if(tooltipHideTimer){ clearTimeout(tooltipHideTimer); tooltipHideTimer=null; }
-            const t=document.getElementById('globalTooltip');
-            let html='<div class="tooltip-header">'+res.guest_name+'</div>';
-            html+='<div class="tooltip-row"><span class="tooltip-label">Stato:</span><span class="tooltip-value">'+getStatusLabel(res.status)+'</span></div>';
-            html+='<div class="tooltip-row"><span class="tooltip-label">Posto:</span><span class="tooltip-value">'+res.spot+'</span></div>';
-            html+='<div class="tooltip-row"><span class="tooltip-label">Arrivo:</span><span class="tooltip-value">'+formatDate(res.check_in_date)+'</span></div>';
-            html+='<div class="tooltip-row"><span class="tooltip-label">Partenza:</span><span class="tooltip-value">'+formatDate(res.check_out_date)+'</span></div>';
-            if(res.license_plate)html+='<div class="tooltip-row"><span class="tooltip-label">Targa:</span><span class="tooltip-value">'+res.license_plate+'</span></div>';
-            if(res.notes)html+='<div class="tooltip-row"><span class="tooltip-label">Note:</span><span class="tooltip-value">'+res.notes+'</span></div>';
-            if(res.non_spostare)html+='<div class="tooltip-row"><span class="tooltip-label">Tipo:</span><span class="tooltip-value">🔒 Non spostabile</span></div>';
-            html+='<div class="tooltip-actions"><button class="tooltip-btn tooltip-btn-edit" data-cell-key="'+cellKey+'">✏️ Modifica</button><button class="tooltip-btn tooltip-btn-delete" data-cell-key="'+cellKey+'">🗑️ Elimina</button></div>';
-            t.innerHTML=html; t.style.visibility='visible';
-            positionTooltip(event.currentTarget);
-        }
-        function scheduleHideTooltip(){ tooltipHideTimer=setTimeout(hideTooltip,300); }
-        function cancelHideTooltip(){ if(tooltipHideTimer){ clearTimeout(tooltipHideTimer); tooltipHideTimer=null; } }
-        function positionTooltip(cell){
-            const t=document.getElementById('globalTooltip');
-            const r=cell.getBoundingClientRect();
-            let top=r.top-t.offsetHeight-10;
-            let left=r.left+(r.width/2)-(t.offsetWidth/2);
-            if(top<0)top=r.bottom+10;
-            if(left<10)left=10;
-            if(left+t.offsetWidth>window.innerWidth-10)left=window.innerWidth-t.offsetWidth-10;
-            t.style.left=left+'px'; t.style.top=top+'px';
-        }
-        function hideTooltip(){
-            document.getElementById('globalTooltip').style.visibility='hidden';
-            if(tooltipHideTimer){ clearTimeout(tooltipHideTimer); tooltipHideTimer=null; }
-        }
-        function setupTooltipEvents(){
-            const t=document.getElementById('globalTooltip');
-            t.addEventListener('mouseenter',cancelHideTooltip);
-            t.addEventListener('mouseleave',hideTooltip);
-            t.addEventListener('click',function(e){
-                const target=e.target;
-                if(target.classList.contains('tooltip-btn-edit')){
-                    const res=cellReservationMap.get(target.getAttribute('data-cell-key'));
-                    if(res){ hideTooltip(); openModalWithReservation(res); }
-                }else if(target.classList.contains('tooltip-btn-delete')){
-                    const res=cellReservationMap.get(target.getAttribute('data-cell-key'));
-                    if(res){ hideTooltip(); deleteReservation(res); }
-                }
-            });
-        }
-        async function deleteReservation(res){
-            if(!confirm('⚠️ Eliminare la prenotazione di '+res.guest_name+'?'))return;
-            const {error}=await sb.from('reservations').delete().eq('id',res.id);
-            if(error){ alert('❌ Errore'); return; }
-            loadReservations();
-        }
-        function setupContextMenu(){
-            document.addEventListener('click',function(e){
-                if(!e.target.closest('#contextMenu'))document.getElementById('contextMenu').style.display='none';
-            });
-        }
-        async function changeStatus(newStatus){
-            document.getElementById('contextMenu').style.display='none';
-            if(!contextMenuReservation)return;
-            const {error}=await sb.from('reservations').update({status:newStatus}).eq('id',contextMenuReservation.id);
-            if(error){ alert('❌ Errore'); return; }
-            loadReservations();
-        }
-        function showAddModal(){ openModal('',''); }
-        function openModalWithReservation(res){
-            document.getElementById('modalTitle').textContent='Modifica Prenotazione';
-            document.getElementById('reservationId').value=res.id;
-            document.getElementById('guestName').value=res.guest_name;
-            document.getElementById('parkingSpot').value=res.spot;
-            document.getElementById('checkInDate').value=res.check_in_date;
-            document.getElementById('checkOutDate').value=res.check_out_date;
-            document.getElementById('licensePlate').value=res.license_plate||'';
-            document.getElementById('notes').value=res.notes||'';
-            document.getElementById('nonSpostare').checked=res.non_spostare||false;
-            document.getElementById('deleteBtn').style.display='block';
-            document.getElementById('reservationModal').classList.add('active');
-        }
-        function openModal(spot,dateStr){
-            const resList=spot&&dateStr?getReservationsForDate(spot,dateStr):[];
-            if(resList.length>0){ openModalWithReservation(resList[0]); return; }
-            document.getElementById('modalTitle').textContent='Nuova Prenotazione';
-            document.getElementById('reservationId').value='';
-            document.getElementById('guestName').value='';
-            document.getElementById('parkingSpot').value=spot||'';
-            document.getElementById('checkInDate').value=dateStr||'';
-            document.getElementById('checkOutDate').value='';
-            document.getElementById('licensePlate').value='';
-            document.getElementById('notes').value='';
-            document.getElementById('nonSpostare').checked=false;
-            document.getElementById('deleteBtn').style.display='none';
-            document.getElementById('reservationModal').classList.add('active');
-        }
-        function closeModal(){ document.getElementById('reservationModal').classList.remove('active'); }
-        async function saveReservation(event){
-            event.preventDefault();
-            const id=document.getElementById('reservationId').value;
-            const spot=document.getElementById('parkingSpot').value;
-            if(!spot){ alert('⚠️ Seleziona un posto!'); return; }
-            const data={
-                spot:spot,
-                guest_name:document.getElementById('guestName').value,
-                check_in_date:document.getElementById('checkInDate').value,
-                check_out_date:document.getElementById('checkOutDate').value,
-                license_plate:document.getElementById('licensePlate').value,
-                notes:document.getElementById('notes').value,
-                non_spostare:document.getElementById('nonSpostare').checked,
-                status:'reserved'
-            };
-            if(data.check_in_date>=data.check_out_date){ alert('⚠️ La partenza deve essere dopo l\'arrivo!'); return; }
-            let result;
-            if(id){ delete data.status; result=await sb.from('reservations').update(data).eq('id',id); }
-            else { result=await sb.from('reservations').insert([data]); }
-            if(result.error){ alert('❌ Errore: '+result.error.message); return; }
-            closeModal();
-            loadReservations();
-        }
-        async function deleteReservationFromModal(){
-            if(!confirm('⚠️ Eliminare questa prenotazione?'))return;
-            const id=document.getElementById('reservationId').value;
-            const {error}=await sb.from('reservations').delete().eq('id',id);
-            if(error){ alert('❌ Errore'); return; }
-            closeModal();
-            loadReservations();
-        }
-
-        function init(){
-            const monthSelect=document.getElementById('monthSelect');
-            ['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'].forEach((m,i)=>{
-                const o=document.createElement('option'); o.value=i; o.textContent=m; monthSelect.appendChild(o);
-            });
-            populateParkingSpots();
-            document.getElementById('monthSelect').value=currentMonth;
-            document.getElementById('yearSelect').value=currentYear;
-            setupTooltipEvents();
-            setupContextMenu();
-            loadReservations();
-            sb.channel('reservations_changes').on('postgres_changes',{event:'*',schema:'public',table:'reservations'},()=>loadReservations()).subscribe();
-
-            document.getElementById('monthSelect').addEventListener('change',changeMonth);
-            document.getElementById('yearSelect').addEventListener('change',changeMonth);
-            document.getElementById('searchGuest').addEventListener('input',searchGuestGlobal);
-            document.getElementById('btnNewReservation').addEventListener('click',showAddModal);
-            document.getElementById('btnCloseModal').addEventListener('click',closeModal);
-            document.getElementById('btnCancel').addEventListener('click',closeModal);
-            document.getElementById('reservationForm').addEventListener('submit',saveReservation);
-            document.getElementById('deleteBtn').addEventListener('click',deleteReservationFromModal);
-            document.getElementById('menuCheckIn').addEventListener('click',()=>changeStatus('checked_in'));
-            document.getElementById('menuCheckOut').addEventListener('click',()=>changeStatus('checked_out'));
-            document.getElementById('menuReserved').addEventListener('click',()=>changeStatus('reserved'));
-            document.getElementById('menuEdit').addEventListener('click',()=>{ if(contextMenuReservation)openModalWithReservation(contextMenuReservation); document.getElementById('contextMenu').style.display='none'; });
-            document.getElementById('menuDelete').addEventListener('click',async()=>{ document.getElementById('contextMenu').style.display='none'; if(contextMenuReservation)await deleteReservation(contextMenuReservation); });
-
-            document.addEventListener('click',function(e){
-                const item=e.target.closest('.search-result-item');
-                if(item){ goToReservation(item.getAttribute('data-date'), item.getAttribute('data-res-id')); }
-            });
-        }
-        window.addEventListener('load',init);
-    </script>
-</body>
-</html>
+                validSpots.forEach(s=>{ if(getReservationsForDate(s,dateStr).len
