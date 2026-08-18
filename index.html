@@ -106,10 +106,6 @@
         .checkbox-group { display: flex; align-items: center; gap: 8px; margin-bottom: 20px; padding: 12px; background: #f3f4f6; border-radius: 6px; }
         .checkbox-group input[type="checkbox"] { width: 20px; height: 20px; cursor: pointer; }
         .checkbox-group label { margin: 0; cursor: pointer; font-weight: 600; color: #374151; }
-        .parking-spots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; max-height: 200px; overflow-y: auto; padding: 10px; border: 2px solid #e5e7eb; border-radius: 6px; }
-        .spot-checkbox { display: flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 500; }
-        .spot-checkbox input { width: auto; }
-        .spot-checkbox.disabled { opacity: 0.4; pointer-events: none; }
         .modal-actions { display: flex; gap: 10px; justify-content: space-between; margin-top: 25px; }
         .loading { text-align: center; padding: 50px; font-size: 18px; color: #6b7280; }
     </style>
@@ -181,17 +177,9 @@
                     <label>Ospite *</label>
                     <input type="text" id="guestName" required>
                 </div>
-                <div class="checkbox-group">
-                    <input type="checkbox" id="isBus">
-                    <label for="isBus">🚌 Bus/Pullman (seleziona più posti)</label>
-                </div>
-                <div class="form-group" id="singleSpotGroup">
+                <div class="form-group">
                     <label>Posto *</label>
                     <select id="parkingSpot" required><option value="">Seleziona...</option></select>
-                </div>
-                <div class="form-group" id="multiSpotGroup" style="display:none;">
-                    <label>Posti (seleziona più posti per il bus) *</label>
-                    <div class="parking-spots-grid" id="parkingSpotsGrid"></div>
                 </div>
                 <div class="form-group">
                     <label>Arrivo *</label>
@@ -228,7 +216,7 @@
 
     <script>
         const SUPABASE_URL = 'https://nsettzmyswlfrnzwvpsq.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ 9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zZXR0em15c3dsZnJuend2cHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMzA0NzIsImV4cCI6MjA4MTYwNjQ3Mn0.OA2B7-6PVOi8XSaM5_r0Dxv_wpbG5I_ImTxaR0sgUoY';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5zZXR0em15c3dsZnJuend2cHNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYwMzA0NzIsImV4cCI6MjA4MTYwNjQ3Mn0.OA2B7-6PVOi8XSaM5_r0Dxv_wpbG5I_ImTxaR0sgUoY';
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         const parkingSpots = ['PK 1','PK 2','PK 3','PK 4','PK 5','PK 6','PK 7','PK 8','PK 9','PK 10','PK 11','PK 12','PK 13','PK 14','PK 15','PK 16','PK 17','PK 18','PK 19','PK 20','PK 21','PK 22','PK 23','PK 24','PK 25','PK 26','PK 27','PK H','NAVETTA','PK ESTERNI','BIDONI'];
@@ -299,23 +287,6 @@
                 o.value=spot; o.textContent=spot+getSpotIcon(spot);
                 select.appendChild(o);
             });
-        }
-        function populateParkingSpotsGrid(){
-            const grid=document.getElementById('parkingSpotsGrid');
-            grid.innerHTML='';
-            parkingSpots.forEach(spot=>{
-                const label=document.createElement('label');
-                label.className='spot-checkbox';
-                label.innerHTML='<input type="checkbox" value="'+spot+'" class="spot-check"> '+spot+getSpotIcon(spot);
-                grid.appendChild(label);
-            });
-        }
-        function toggleBusMode(){
-            const isBus=document.getElementById('isBus').checked;
-            document.getElementById('singleSpotGroup').style.display=isBus?'none':'block';
-            document.getElementById('multiSpotGroup').style.display=isBus?'block':'none';
-            if(isBus){ document.getElementById('parkingSpot').removeAttribute('required'); }
-            else { document.getElementById('parkingSpot').setAttribute('required',''); }
         }
         function changeMonth(){
             currentMonth=parseInt(document.getElementById('monthSelect').value);
@@ -571,16 +542,7 @@
             document.getElementById('modalTitle').textContent='Modifica Prenotazione';
             document.getElementById('reservationId').value=res.id;
             document.getElementById('guestName').value=res.guest_name;
-            const spotsArr=res.spot.split(',').map(s=>s.trim());
-            if(spotsArr.length>1){
-                document.getElementById('isBus').checked=true;
-                toggleBusMode();
-                document.querySelectorAll('.spot-check').forEach(cb=>{ cb.checked=spotsArr.includes(cb.value); });
-            }else{
-                document.getElementById('isBus').checked=false;
-                toggleBusMode();
-                document.getElementById('parkingSpot').value=res.spot;
-            }
+            document.getElementById('parkingSpot').value=res.spot;
             document.getElementById('checkInDate').value=res.check_in_date;
             document.getElementById('checkOutDate').value=res.check_out_date;
             document.getElementById('licensePlate').value=res.license_plate||'';
@@ -595,9 +557,6 @@
             document.getElementById('modalTitle').textContent='Nuova Prenotazione';
             document.getElementById('reservationId').value='';
             document.getElementById('guestName').value='';
-            document.getElementById('isBus').checked=false;
-            toggleBusMode();
-            document.querySelectorAll('.spot-check').forEach(cb=>cb.checked=false);
             document.getElementById('parkingSpot').value=spot||'';
             document.getElementById('checkInDate').value=dateStr||'';
             document.getElementById('checkOutDate').value='';
@@ -611,15 +570,8 @@
         async function saveReservation(event){
             event.preventDefault();
             const id=document.getElementById('reservationId').value;
-            let spot;
-            if(document.getElementById('isBus').checked){
-                const selected=Array.from(document.querySelectorAll('.spot-check:checked')).map(cb=>cb.value);
-                if(selected.length===0){ alert('⚠️ Seleziona almeno un posto per il bus!'); return; }
-                spot=selected.join(', ');
-            }else{
-                spot=document.getElementById('parkingSpot').value;
-                if(!spot){ alert('⚠️ Seleziona un posto!'); return; }
-            }
+            const spot=document.getElementById('parkingSpot').value;
+            if(!spot){ alert('⚠️ Seleziona un posto!'); return; }
             const data={
                 spot:spot,
                 guest_name:document.getElementById('guestName').value,
@@ -653,7 +605,6 @@
                 const o=document.createElement('option'); o.value=i; o.textContent=m; monthSelect.appendChild(o);
             });
             populateParkingSpots();
-            populateParkingSpotsGrid();
             document.getElementById('monthSelect').value=currentMonth;
             document.getElementById('yearSelect').value=currentYear;
             setupTooltipEvents();
@@ -669,7 +620,6 @@
             document.getElementById('btnCancel').addEventListener('click',closeModal);
             document.getElementById('reservationForm').addEventListener('submit',saveReservation);
             document.getElementById('deleteBtn').addEventListener('click',deleteReservationFromModal);
-            document.getElementById('isBus').addEventListener('change',toggleBusMode);
             document.getElementById('menuCheckIn').addEventListener('click',()=>changeStatus('checked_in'));
             document.getElementById('menuCheckOut').addEventListener('click',()=>changeStatus('checked_out'));
             document.getElementById('menuReserved').addEventListener('click',()=>changeStatus('reserved'));
